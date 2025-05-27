@@ -12,4 +12,9 @@ export default {
   JWT_ACCESS_T: process.env.JWT_ACCESS_SECRET_TIME,
   JWT_REFRESH_K: process.env.JWT_REFRESH_SECRET_KEY,
   JWT_TIME_T: process.env.JWT_REFRESH_SECRET_TIME,
+  MAIL_HOST: process.env.SMTP_HOST,
+  MAIL_PORT: Number(process.env.SMTP_PORT),
+  MAIL_USER: process.env.SMTP_USER,
+  MAIL_PASS: process.env.SMTP_PASS,
+  MAIL_FROM: process.env.SMTP_FROM,
 };
