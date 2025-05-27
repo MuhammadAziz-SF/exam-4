@@ -16,7 +16,7 @@ import { Admin } from './admin/models/admin.model';
       synchronize: true,
       logging: false,
       autoLoadModels: true,
-      models: [],
+      models: [Admin],
     }),
     AdminModule,
   ],
