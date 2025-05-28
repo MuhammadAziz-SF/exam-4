@@ -1,9 +1,9 @@
 import { Column, DataType, Model, Table } from "sequelize-typescript";
-import { Status } from "src/enum";
+import { StoreStatus } from "src/enum";
 
 @Table({tableName: "store"})
 
-export class Store extends Model{
+export class Store extends Model{ 
     @Column({
         type: DataType.STRING,
     })
@@ -33,9 +33,9 @@ export class Store extends Model{
     location: string
 
     @Column({
-        type: DataType.ENUM('active', 'inactive')
+        type: DataType.ENUM('open', 'closed', 'maintenance', 'paused', 'inactive')
     })
-    store_status:Status
+    store_status:StoreStatus
 
     @Column({
         type: DataType.DECIMAL,

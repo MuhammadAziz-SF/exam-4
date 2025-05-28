@@ -1,5 +1,6 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
 import { Roles } from 'src/enum';
+import { Store } from 'src/store/model/store.model';
 
 @Table({ tableName: 'users' })
 export class User extends Model {
