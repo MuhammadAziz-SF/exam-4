@@ -8,10 +8,11 @@ import { Admin } from './models/admin.model';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { RolesGuard } from '../guards/roles.guard';
 import { AdminService } from './admin.service';
-import { EmailService } from './services/email.service';
+import { EmailService } from '../services/email.service';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
+import { TokenService } from '../services/jwt-gen';
 
 @Module({
   imports: [
@@ -48,7 +49,7 @@ import { join } from 'path';
     }),
   ],
   controllers: [AdminController],
-  providers: [AdminService, JwtStrategy, RolesGuard, EmailService],
-  exports: [JwtStrategy, PassportModule, RolesGuard]
+  providers: [AdminService, JwtStrategy, RolesGuard, EmailService, TokenService],
+  exports: [JwtStrategy, PassportModule, RolesGuard, TokenService]
 })
 export class AdminModule {}
