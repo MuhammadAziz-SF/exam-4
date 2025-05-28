@@ -12,3 +12,24 @@ export enum Roles {
   MANAGER = 'manager',
   DELIVERY_AGENT = 'delivery',
 }
+
+export enum ProductStatus {
+  EXISTS = 'exists',
+  NOT_EXISTS = 'not exists'
+}
+
+export enum DeliveryStatus {
+  RECEIVED = 'received',
+  PREPARING = 'preparing',
+  DELIVERING = 'delivering',
+  COMPLETED = 'completed',
+  REJECTED = 'rejected'
+}
+
+export enum StoreStatus {
+  OPEN = "open",
+  CLOSED = "closed",
+  MAINTENANCE = "maintenance",
+  PAUSED = "paused",
+  INACTIVE = "inactive",
+}
