@@ -5,11 +5,10 @@ export class Product extends Model {
   @Column({
     type: DataType.UUID,
     primaryKey: true,
-    defaultValue: DataType.UUIDV4, 
+    defaultValue: DataType.UUIDV4,
     allowNull: false,
   })
   // id: string;
-
   @Column({
     type: DataType.STRING,
     allowNull: false,

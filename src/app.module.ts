@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { AdminModule } from './admin/admin.module';
 import config from './config';
-import { Admin } from './admin/models/admin.model';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductModule } from './product/product.module';
-
+import { StoreModule } from './store/store.module';
+import { User } from './users/entity/user.entitiy';
+import { Store } from './store/model/store.model';
 
 @Module({
   imports: [
@@ -20,13 +20,12 @@ import { ProductModule } from './product/product.module';
       synchronize: true,
       logging: false,
       autoLoadModels: true,
-      models: [Admin],
+      models: [User, Store],
     }),
-    AdminModule,
     UsersModule,
     CategoriesModule,
     ProductModule,
-
+    StoreModule,
   ],
 })
 export class AppModule {}
