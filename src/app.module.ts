@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductModule } from './product/product.module';
 
+
 @Module({
   imports: [
     SequelizeModule.forRoot({
@@ -25,6 +26,7 @@ import { ProductModule } from './product/product.module';
     UsersModule,
     CategoriesModule,
     ProductModule,
+
   ],
 })
 export class AppModule {}
