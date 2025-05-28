@@ -8,9 +8,7 @@ export enum Roles {
   ADMIN = 'admin',
   BUYER = 'buyer',
   SELLER = 'seller',
-  SUPPORT = 'support',         
-  MANAGER = 'manager',         
-  DELIVERY_AGENT = 'delivery'  
+  SUPPORT = 'support',
+  MANAGER = 'manager',
+  DELIVERY_AGENT = 'delivery',
 }
-
-
