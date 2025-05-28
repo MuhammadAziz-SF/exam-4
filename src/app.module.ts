@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { AdminModule } from './admin/admin.module';
 import config from './config';
 import { Admin } from './admin/models/admin.model';
+import { Product } from './product/models/product.model';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { Admin } from './admin/models/admin.model';
       synchronize: true,
       logging: false,
       autoLoadModels: true,
-      models: [],
+      models: [Product],
     }),
     AdminModule,
   ],
