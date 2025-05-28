@@ -11,7 +11,7 @@ import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { decrypt, encrypt } from '../utils/bcrypt-encrypt';
 import { LoginDto } from './dto/login.dto';
-import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { Roles } from '../enum';
 import { EmailService } from './services/email.service';
 
