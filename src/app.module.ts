@@ -12,6 +12,8 @@ import { DeliversModule } from './delivers/delivers.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { OrderDeliveryModule } from './order_delivery/order_delivery.module';
+import { OrderDelivery } from './order_delivery/entities/order_delivery.entity';
 
 
 @Module({
@@ -26,7 +28,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       synchronize: true,
       logging: false,
       autoLoadModels: true,
-      models: [Admin],
+      models: [Admin,OrderDelivery],
     }),
     JwtModule.register({
       secret: config.JWT_ACCESS_K,
@@ -37,7 +39,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     UsersModule,
     CategoriesModule,
     ProductModule,
+    OrderDeliveryModule,
     DeliversModule,
+
   ],
   providers: [JwtStrategy],
 })
