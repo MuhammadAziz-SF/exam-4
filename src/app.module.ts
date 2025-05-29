@@ -6,9 +6,13 @@ import { Admin } from './admin/models/admin.model';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductModule } from './product/product.module';
+
+import { DeliversModule } from './delivers/delivers.module';
+
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
+
 
 @Module({
   imports: [
@@ -33,6 +37,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     UsersModule,
     CategoriesModule,
     ProductModule,
+    DeliversModule,
   ],
   providers: [JwtStrategy],
 })
