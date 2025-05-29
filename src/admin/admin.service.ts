@@ -3,176 +3,100 @@ import {
   UnauthorizedException,
   ConflictException,
   InternalServerErrorException,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
+import { Response } from 'express';
 import { Admin } from './models/admin.model';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { decrypt, encrypt } from '../utils/bcrypt-encrypt';
 import { LoginDto } from './dto/login.dto';
-import { JwtPayload } from './interfaces/jwt-payload.interface';
-import { Roles } from '../enum';
-import { EmailService } from './services/email.service';
+import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { Roles, Status } from '../enum';
+import { TokenService } from '../services/jwt-gen';
+import config from '../config';
+import { writeToCookie, clearCookie } from '../utils/cookie';
+import { catchError } from 'src/utils/catch-error';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class AdminService {
-  private otpMap = new Map<string,{ otp: number; expiresAt: Date; isVerified: boolean }>();
-
   constructor(
     @InjectModel(Admin)
     private readonly adminModel: typeof Admin,
-    private readonly jwtService: JwtService,
-    private readonly emailService: EmailService,
+    private readonly tokenService: TokenService,
   ) {}
 
-  private generateOTP(): number {
+  async onModuleInit(): Promise<void> {
     try {
-      return Math.floor(100000 + Math.random() * 900000);
+      const isSuperAdmin = await this.adminModel.findOne({
+        where: { role: Roles.SUPER_ADMIN },
+      });
+      if (!isSuperAdmin) {
+        const hashedPassword = await encrypt(config.ADMIN_PASSWORD);
+        await this.adminModel.create({
+          full_name: config.ADMIN_FULL_NAME,
+          email: config.ADMIN_EMAIL,
+          phone_number: config.ADMIN_PHONE,
+          hashed_password: hashedPassword,
+          role: Roles.SUPER_ADMIN,
+          status: Status.ACTIVE,
+        });
+      }
     } catch (error) {
-      throw new InternalServerErrorException('Error generating OTP');
-    }
-  }
-
-  async sendOTP(email: string) {
-    try {
-      const otp = this.generateOTP();
-      const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 5); // OTP expires in 5 minutes
-
-      this.otpMap.set(email, { otp, expiresAt, isVerified: false });
-
-      const emailSent = await this.emailService.sendOTP(email, otp);
-      if (!emailSent) {
-        throw new InternalServerErrorException('Failed to send OTP email');
-      }
-
-      return {
-        statusCode: 200,
-        message: 'OTP sent successfully',
-      };
-    } catch (error) {
-      if (error instanceof InternalServerErrorException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Error sending OTP');
-    }
-  }
-
-  async verifyOTP(email: string, otp: number) {
-    try {
-      const otpData = this.otpMap.get(email);
-      if (!otpData) {
-        throw new UnauthorizedException('OTP not found or expired');
-      }
-
-      if (otpData.otp !== otp) {
-        throw new UnauthorizedException('Invalid OTP');
-      }
-
-      if (new Date() > otpData.expiresAt) {
-        this.otpMap.delete(email);
-        throw new UnauthorizedException('OTP expired');
-      }
-
-      otpData.isVerified = true;
-      return {
-        statusCode: 200,
-        message: 'OTP verified successfully',
-      };
-    } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Error verifying OTP');
+      return catchError(error);
     }
   }
 
   async createAdmin(createAdminDto: CreateAdminDto) {
     try {
-      const { email, phone_number } = createAdminDto;
+      const { email, phone_number, password } = createAdminDto;
 
-      const existingEmail = await this.adminModel.findOne({ where: { email } });
-      if (existingEmail) {
-        throw new ConflictException('Email already exists');
-      }
-
-      const existingPhone = await this.adminModel.findOne({
-        where: { phone_number },
+      const existingAdmin = await this.adminModel.findOne({
+        where: {
+          [Op.or]: [{ email }, { phone_number }],
+        },
       });
-      if (existingPhone) {
-        throw new ConflictException('Phone number already exists');
+
+      if (existingAdmin) {
+        throw new ConflictException(
+          existingAdmin.email === email
+            ? 'Email already exists'
+            : 'Phone number already exists',
+        );
       }
 
-      await this.sendOTP(email);
-
-      return {
-        statusCode: 200,
-        message:
-          'OTP sent to your email. Please verify to complete registration.',
-      };
-    } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Error in registration process');
-    }
-  }
-
-  async verifyAndCreateAdmin(createAdminDto: CreateAdminDto, otp: number) {
-    try {
-      const { email } = createAdminDto;
-      const otpData = this.otpMap.get(email);
-
-      if (!otpData || !otpData.isVerified || otpData.otp !== otp) {
-        throw new UnauthorizedException('Please verify your email first');
-      }
-
-      const hashed_password = await encrypt(createAdminDto.password);
+      const hashedPassword = await encrypt(password);
       const admin = await this.adminModel.create({
         ...createAdminDto,
-        hashed_password,
-        role: Roles.ADMIN,
+        hashed_password: hashedPassword,
+        status: Status.ACTIVE,
       });
 
-      this.otpMap.delete(email);
-
-      const payload: JwtPayload = {
-        id: admin.id,
-        role: admin.role,
-        email: admin.email,
-      };
-
-      const token = this.jwtService.sign(payload);
-
+      const { hashed_password, ...result } = admin.toJSON();
       return {
         statusCode: 201,
         message: 'Admin created successfully',
-        data: {
-          token,
-          admin: {
-            id: admin.id,
-            email: admin.email,
-            full_name: admin.full_name,
-            role: admin.role,
-          },
-        },
+        data: result,
       };
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Error completing registration');
+      return catchError(error);
     }
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, res: Response) {
     try {
       const { email, password } = loginDto;
       const admin = await this.adminModel.findOne({ where: { email } });
 
       if (!admin) {
-        throw new UnauthorizedException('Invalid credentials');
+        throw new BadRequestException('Invalid credentials');
+      }
+
+      if (admin.status === Status.INACTIVE) {
+        throw new UnauthorizedException('Account is inactive');
       }
 
       const isPasswordValid = await decrypt(password, admin.hashed_password);
@@ -180,81 +104,70 @@ export class AdminService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      // Send OTP for login verification
-      await this.sendOTP(email);
-
-      return {
-        statusCode: 200,
-        message: 'OTP sent to your email. Please verify to complete login.',
-      };
-    } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Error in login process');
-    }
-  }
-
-  async verifyAndLogin(email: string, otp: number) {
-    try {
-      const admin = await this.adminModel.findOne({ where: { email } });
-      if (!admin) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      const otpData = this.otpMap.get(email);
-      if (!otpData || !otpData.isVerified || otpData.otp !== otp) {
-        throw new UnauthorizedException('Please verify your email first');
-      }
-
       const payload: JwtPayload = {
         id: admin.id,
-        role: admin.role,
         email: admin.email,
+        status: admin.status,
+        role: admin.role,
       };
 
-      const token = this.jwtService.sign(payload);
-      this.otpMap.delete(email);
+      const accessToken = await this.tokenService.generateAccessToken(payload);
+      const refreshToken = await this.tokenService.generateRefreshToken(payload);
+
+      writeToCookie(res, 'refreshToken', refreshToken);
 
       return {
         statusCode: 200,
         message: 'Login successful',
         data: {
-          token,
+          accessToken,
           admin: {
             id: admin.id,
-            email: admin.email,
             full_name: admin.full_name,
+            email: admin.email,
             role: admin.role,
           },
         },
       };
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Error completing login');
+      return catchError(error);
+    }
+  }
+
+  async logout(res: Response) {
+    try {
+      clearCookie(res, 'refreshToken');
+      return {
+        statusCode: 200,
+        message: 'Logout successful',
+      };
+    } catch (error) {
+      return catchError(error);
     }
   }
 
   async findAll() {
     try {
-      const admins = await this.adminModel.findAll();
+      const admins = await this.adminModel.findAll({
+        attributes: { exclude: ['hashed_password'] },
+      });
       return {
         statusCode: 200,
         message: 'Success',
         data: admins,
       };
     } catch (error) {
-      throw new InternalServerErrorException('Error fetching admins');
+      return catchError(error);
     }
   }
 
   async findOne(id: string) {
     try {
-      const admin = await this.adminModel.findByPk(id);
+      const admin = await this.adminModel.findByPk(id, {
+        attributes: { exclude: ['hashed_password'] },
+      });
       if (!admin) {
-        throw new ConflictException('Admin not found');
+        throw new NotFoundException('Admin not found');
       }
       return {
         statusCode: 200,
@@ -262,10 +175,7 @@ export class AdminService {
         data: admin,
       };
     } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Error fetching admin');
+      return catchError(error);
     }
   }
 
@@ -273,20 +183,41 @@ export class AdminService {
     try {
       const admin = await this.adminModel.findByPk(id);
       if (!admin) {
-        throw new ConflictException('Admin not found');
+        throw new NotFoundException('Admin not found');
+      }
+
+      if (updateAdminDto.password) {
+        updateAdminDto.password = await encrypt(updateAdminDto.password);
+        delete updateAdminDto.password;
       }
 
       await admin.update(updateAdminDto);
+      const { hashed_password, ...result } = admin.toJSON();
+
       return {
         statusCode: 200,
         message: 'Admin updated successfully',
-        data: admin,
+        data: result,
       };
     } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
+      return catchError(error);
+    }
+  }
+
+  async remove(id: string) {
+    try {
+      const admin = await this.adminModel.findByPk(id);
+      if (!admin) {
+        throw new NotFoundException('Admin not found');
       }
-      throw new InternalServerErrorException('Error updating admin');
+
+      await admin.destroy();
+      return {
+        statusCode: 200,
+        message: 'Admin deleted successfully',
+      };
+    } catch (error) {
+      return catchError(error);
     }
   }
 }

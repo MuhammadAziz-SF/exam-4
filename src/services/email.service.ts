@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import config from '../../config';
+import config from '../config';
 
 @Injectable()
 export class EmailService implements OnModuleInit {
