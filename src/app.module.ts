@@ -1,19 +1,24 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { AdminModule } from './admin/admin.module';
 import config from './config';
-import { Admin } from './admin/models/admin.model';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductModule } from './product/product.module';
 
+
+import { StoreModule } from './store/store.module';
+import { User } from './users/entity/user.entitiy';
+import { Store } from './store/model/store.model';
+
 import { DeliversModule } from './delivers/delivers.module';
+
 
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { OrderDeliveryModule } from './order_delivery/order_delivery.module';
 import { OrderDelivery } from './order_delivery/entities/order_delivery.entity';
+
 
 
 @Module({
@@ -28,14 +33,18 @@ import { OrderDelivery } from './order_delivery/entities/order_delivery.entity';
       synchronize: true,
       logging: false,
       autoLoadModels: true,
-      models: [Admin,OrderDelivery],
+
+      models: [Admin,OrderDelivery, User, Store],
     }),
+    UsersModule,
+    CategoriesModule,
+    ProductModule,
+    StoreModule,
     JwtModule.register({
       secret: config.JWT_ACCESS_K,
       signOptions: { expiresIn: config.JWT_ACCESS_T },
     }),
     PassportModule,
-    AdminModule,
     UsersModule,
     CategoriesModule,
     ProductModule,
