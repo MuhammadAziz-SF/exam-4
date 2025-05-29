@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsString } from "class-validator";
-
+import { IsNotEmpty, IsString,IsEnum } from "class-validator";
+import { DeliveryStatus, Status } from "src/enum";
 export class CreateOrderDeliveryDto {
     @IsNotEmpty()
 @IsString()
@@ -20,4 +20,12 @@ message:string
 @IsNotEmpty()
 @IsString()
 address:string
+
+@IsNotEmpty()
+@IsEnum(Status)
+status: string;
+
+@IsNotEmpty()
+@IsEnum(DeliveryStatus)
+delivery_status: string;
 }
