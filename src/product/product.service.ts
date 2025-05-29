@@ -54,11 +54,15 @@ export class ProductService {
   }
 
   async findOne(id: number) {
-    const product = await this.model.findByPk(id);
-    if (!product) {
-      throw new ConflictException('Product not found');
+    try {
+      const product = await this.model.findByPk(id);
+      if (!product) {
+        throw new ConflictException('Product not found');
+      }
+      return product;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
-    return product;
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {

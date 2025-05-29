@@ -1,26 +1,51 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-
+import { InjectModel } from '@nestjs/sequelize';
+import { Category } from './entities/category.entity';
+import { InternalServerErrorException } from '@nestjs/common';
 @Injectable()
 export class CategoriesService {
-  create(createCategoryDto: CreateCategoryDto) {
-    return 'This action adds a new category';
-  }
+  constructor(
+    @InjectModel(Category)private model:typeof Category
+  ){ }
+  async create(createCategoryDto: CreateCategoryDto) {
+    try {
+      const newCategory=await this.model.create({...createCategoryDto})
+    return newCategory
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }}
 
-  findAll() {
-    return `This action returns all categories`;
-  }
+  async findAll() {
+    try {
+      const categories=await this.model.findAll();
+    return categories;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }}
 
-  findOne(id: number) {
-    return `This action returns a #${id} category`;
-  }
+  async findOne(id: number) {
+    try {
+      const categories=await this.model.findByPk(id)
+    return categories;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }}
 
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category`;
-  }
+  async update(id: number, updateCategoryDto: UpdateCategoryDto) {
+    try {
+      const categories=await this.model.update(updateCategoryDto,{where:{id},returning:true});
+    return categories[1][0]
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }}
 
-  remove(id: number) {
-    return `This action removes a #${id} category`;
-  }
+  async remove(id: number) {
+    try {
+      await this.model.destroy({where:{id}});
+    return{data:{}}
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }}
 }

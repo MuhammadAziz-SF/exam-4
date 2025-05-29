@@ -5,12 +5,20 @@ import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductModule } from './product/product.module';
 
+
 import { StoreModule } from './store/store.module';
 import { User } from './users/entity/user.entitiy';
 import { Store } from './store/model/store.model';
+
+import { DeliversModule } from './delivers/delivers.module';
+
+
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { OrderDeliveryModule } from './order_delivery/order_delivery.module';
+import { OrderDelivery } from './order_delivery/entities/order_delivery.entity';
+
 
 
 @Module({
@@ -25,7 +33,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       synchronize: true,
       logging: false,
       autoLoadModels: true,
-      models: [User, Store],
+
+      models: [Admin,OrderDelivery, User, Store],
     }),
     UsersModule,
     CategoriesModule,
@@ -39,6 +48,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     UsersModule,
     CategoriesModule,
     ProductModule,
+    OrderDeliveryModule,
+    DeliversModule,
+
   ],
   providers: [JwtStrategy],
 })
