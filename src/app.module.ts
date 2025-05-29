@@ -11,6 +11,7 @@ import { Store } from './store/model/store.model';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { CartModule } from './cart/cart.module';
 
 
 @Module({
@@ -39,6 +40,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     UsersModule,
     CategoriesModule,
     ProductModule,
+    CartModule,
   ],
   providers: [JwtStrategy],
 })
