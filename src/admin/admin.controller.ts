@@ -15,6 +15,7 @@ import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { LoginDto } from './dto/login.dto';
+import { ConfirmSignInAdminDto } from './dto/confirm-signin.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { RolesDecorator } from '../decorators/roles.decorator';
@@ -58,7 +59,7 @@ export class AdminController {
     return this.adminService.createAdmin(createAdminDto);
   }
 
-  @Post('login')
+  @Post('/login')
   @ApiOperation({ summary: 'Admin login' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({
@@ -73,8 +74,27 @@ export class AdminController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
   })
-  login(@Body() loginDto: LoginDto, @Res() res: Response) {
+  login(@Body() loginDto: LoginDto, res: Response) {
     return this.adminService.login(loginDto, res);
+  }
+
+  @Post('/confirm-login')
+  @ApiOperation({ summary: 'Confirm admin login with OTP' })
+  @ApiBody({ type: ConfirmSignInAdminDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Login confirmed successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid OTP or OTP expired',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
+  confirmLogin(@Body() confirmSignInAdminDto: ConfirmSignInAdminDto, @Res() res: Response) {
+    return this.adminService.confirmLogin(confirmSignInAdminDto, res);
   }
 
   @Post('logout')

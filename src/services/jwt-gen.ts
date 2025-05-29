@@ -7,14 +7,14 @@ export class TokenService {
   constructor(private readonly jwtService: JwtService) {}
 
   generateAccessToken = async (payload: object) => {
-    return this.jwtService.signAsync(payload, {
+    return await this.jwtService.signAsync(payload, {
       secret: config.JWT_ACCESS_K,
       expiresIn: config.JWT_ACCESS_T,
     });
   };
 
   generateRefreshToken = async (payload: object) => {
-    return this.jwtService.signAsync(payload, {
+    return await this.jwtService.signAsync(payload, {
       secret: config.JWT_REFRESH_K,
       expiresIn: config.JWT_TIME_T,
     });

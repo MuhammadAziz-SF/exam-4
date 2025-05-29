@@ -8,11 +8,11 @@ import { Admin } from './models/admin.model';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { RolesGuard } from '../guards/roles.guard';
 import { AdminService } from './admin.service';
-import { EmailService } from '../services/email.service';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
 import { TokenService } from '../services/jwt-gen';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -22,6 +22,7 @@ import { TokenService } from '../services/jwt-gen';
       signOptions: { expiresIn: config.JWT_ACCESS_T }
     }),
     SequelizeModule.forFeature([Admin]),
+    CacheModule.register(),
     MailerModule.forRoot({
       transport: {
         host: config.MAIL_HOST,
@@ -49,7 +50,7 @@ import { TokenService } from '../services/jwt-gen';
     }),
   ],
   controllers: [AdminController],
-  providers: [AdminService, JwtStrategy, RolesGuard, EmailService, TokenService],
+  providers: [AdminService, JwtStrategy, RolesGuard, TokenService],
   exports: [JwtStrategy, PassportModule, RolesGuard, TokenService]
 })
 export class AdminModule {}

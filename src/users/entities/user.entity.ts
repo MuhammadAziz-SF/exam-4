@@ -1,30 +1,67 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
-import { Roles } from 'src/enum';
+import { Column, DataType, Model, Table, HasMany } from 'sequelize-typescript';
+import { Roles, Status } from 'src/enum';
+import { v4 as uuidv4 } from 'uuid';
+import { Product } from '../../product/models/product.model';
 
 @Table({ tableName: 'users' })
-export class User extends Model{
+export class User extends Model {
   @Column({
-    type: DataType.STRING,
-    allowNull: false,
+    type: DataType.UUID,
+    primaryKey: true,
+    defaultValue: () => uuidv4(),
   })
-  phone_number!: string;
+  declare id: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  email!: string;
+  declare full_name: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  password!: string;
+  declare phone_number: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  declare email: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  declare hashed_password: string;
 
   @Column({
     type: DataType.ENUM(Roles.BUYER, Roles.DELIVERY_AGENT, Roles.MANAGER, Roles.SELLER, Roles.SUPPORT),
     allowNull: false,
     defaultValue: Roles.BUYER,
   })
-  role!: Roles;
+  declare role: Roles;
+
+  @Column({
+    type: DataType.ENUM(Status.ACTIVE, Status.INACTIVE),
+    allowNull: false,
+    defaultValue: Status.ACTIVE,
+  })
+  declare status: Status;
+
+  @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+  })
+  declare created_at: Date;
+
+  @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+  })
+  declare updated_at: Date;
+
+  @HasMany(() => Product)
+  declare products: Product[];
 }

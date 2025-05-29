@@ -9,6 +9,10 @@ import { ProductModule } from './product/product.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { Product } from './product/models/product.model';
+import { Category } from './categories/entities/category.entity';
+import { User } from './users/entities/user.entity';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -22,7 +26,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       synchronize: true,
       logging: false,
       autoLoadModels: true,
-      models: [Admin],
+      models: [Admin, User, Category, Product],
+    }),
+    CacheModule.register({
+      isGlobal: true,
     }),
     JwtModule.register({
       secret: config.JWT_ACCESS_K,
