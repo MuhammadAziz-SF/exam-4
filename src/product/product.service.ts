@@ -45,30 +45,32 @@ export class ProductService {
   }
 
   async findAll() {
-    try{
-      const products = await this.model.findAll()
+    try {
+      const products = await this.model.findAll();
       return products;
-
-    }catch(error){
+    } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
 
   async findOne(id: number) {
-    const product = await this.model.findByPk(id);
-    if(!product){
-      throw new ConflictException('Product not found')
-    }
-    return product;
-  }
-
-  async update(id: number, updateProductDto: UpdateProductDto) {
-    try{
+    try {
       const product = await this.model.findByPk(id);
       if (!product) {
         throw new ConflictException('Product not found');
       }
-      
+      return product;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async update(id: number, updateProductDto: UpdateProductDto) {
+    try {
+      const product = await this.model.findByPk(id);
+      if (!product) {
+        throw new ConflictException('Product not found');
+      }
 
       const { name } = updateProductDto;
       if (name && name !== product.name) {
@@ -80,23 +82,21 @@ export class ProductService {
 
       await product.update(updateProductDto);
       return product;
-
-    }catch(error){
+    } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
 
   async remove(id: number) {
-    try{
+    try {
       const product = await this.model.findByPk(id);
       if (!product) {
         throw new ConflictException('Product not found');
       }
       await product.destroy();
-      return {}
-    
-    }catch(error){
-    throw new InternalServerErrorException(error.message);
+      return {};
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
   }
 }
