@@ -8,7 +8,9 @@ import {
 import { Roles, Status } from 'src/enum';
 import { v4 as uuidv4 } from 'uuid';
 
-@Table({ tableName: 'admins' })
+@Table({
+  tableName: 'admins',
+})
 export class Admin extends Model {
   @PrimaryKey
   @Column({

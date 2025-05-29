@@ -6,7 +6,9 @@ import { Admin } from './admin/models/admin.model';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductModule } from './product/product.module';
-import { DeliversModule } from './delivers/delivers.module';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -22,11 +24,17 @@ import { DeliversModule } from './delivers/delivers.module';
       autoLoadModels: true,
       models: [Admin],
     }),
+    JwtModule.register({
+      secret: config.JWT_ACCESS_K,
+      signOptions: { expiresIn: config.JWT_ACCESS_T },
+    }),
+    PassportModule,
     AdminModule,
     UsersModule,
     CategoriesModule,
     ProductModule,
     DeliversModule,
   ],
+  providers: [JwtStrategy],
 })
 export class AppModule {}
