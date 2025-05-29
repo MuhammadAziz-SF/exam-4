@@ -1,4 +1,12 @@
-import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
+import {
+  AutoIncrement,
+  Column,
+  DataType,
+  HasMany,
+  Model,
+  PrimaryKey,
+  Table,
+} from 'sequelize-typescript';
 import { Roles } from 'src/enum';
 import { Store } from 'src/store/model/store.model';
 
@@ -34,4 +42,7 @@ export class User extends Model {
     defaultValue: Roles.BUYER,
   })
   role: Roles;
+
+  @HasMany(() => Store)
+  store: Store;
 }

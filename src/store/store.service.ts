@@ -16,7 +16,7 @@ export class StoreService {
     try {
       const store = await this.model.create({ ...createStoreDto });
       return {
-        statusCode: 200,
+        statusCode: 201,
         message: 'success',
         data: store,
       };

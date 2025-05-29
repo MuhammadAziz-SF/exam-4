@@ -8,6 +8,7 @@ import {
   Length,
   Max,
   Min,
+  IsInt,
 } from 'class-validator';
 
 export enum StoreStatus{
@@ -52,4 +53,8 @@ export class CreateStoreDto {
   @IsNotEmpty()
   @IsUrl()
   logo_url: string;
+
+  @IsInt()
+  @IsNotEmpty()
+  seller_id: number;
 }
