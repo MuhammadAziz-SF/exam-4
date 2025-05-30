@@ -5,6 +5,8 @@ import {
   InternalServerErrorException,
   BadRequestException,
   NotFoundException,
+  HttpException,
+  Inject,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Response } from 'express';
@@ -18,15 +20,23 @@ import { Roles, Status } from '../enum';
 import { TokenService } from '../services/jwt-gen';
 import config from '../config';
 import { writeToCookie, clearCookie } from '../utils/cookie';
+import { generateOTP } from '../utils/otp-gen';
 import { catchError } from 'src/utils/catch-error';
 import { Op } from 'sequelize';
+import { MailService } from 'src/mail/email.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { ConfirmSignInAdminDto } from './dto/confirm-signin.dto';
 
 @Injectable()
 export class AdminService {
   constructor(
     @InjectModel(Admin)
     private readonly adminModel: typeof Admin,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
     private readonly tokenService: TokenService,
+    private readonly mailService: MailService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -50,7 +60,7 @@ export class AdminService {
     }
   }
 
-  async createAdmin(createAdminDto: CreateAdminDto) {
+  async createAdmin(createAdminDto: CreateAdminDto): Promise<object> {
     try {
       const { email, phone_number, password } = createAdminDto;
 
@@ -86,49 +96,62 @@ export class AdminService {
     }
   }
 
-  async login(loginDto: LoginDto, res: Response) {
+  async login(loginDto: LoginDto) {
     try {
       const { email, password } = loginDto;
+  
       const admin = await this.adminModel.findOne({ where: { email } });
-
+  
       if (!admin) {
         throw new BadRequestException('Invalid credentials');
       }
-
+  
       if (admin.status === Status.INACTIVE) {
         throw new UnauthorizedException('Account is inactive');
       }
-
+  
       const isPasswordValid = await decrypt(password, admin.hashed_password);
+  
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      const payload: JwtPayload = {
-        id: admin.id,
-        email: admin.email,
-        status: admin.status,
-        role: admin.role,
-      };
-
-      const accessToken = await this.tokenService.generateAccessToken(payload);
-      const refreshToken = await this.tokenService.generateRefreshToken(payload);
-
-      writeToCookie(res, 'refreshToken', refreshToken);
-
+      const otp = generateOTP();
+      await this.mailService.sendOtp(admin.email, String(otp));
+      await this.cacheManager.set(email, otp, 300);
       return {
         statusCode: 200,
-        message: 'Login successful',
+        message: 'success',
+        data: email,
+      };
+
+    } catch (error) {
+      return catchError(error);
+    }
+  }
+  
+  async confirmLogin(confirmSignInAdminDto: ConfirmSignInAdminDto, res: Response): Promise<object> {
+    try {
+      const { email, otp } = confirmSignInAdminDto;
+      const hasUser = await this.cacheManager.get(email);
+      if (!hasUser || hasUser != otp) {
+        throw new BadRequestException('OTP expired');
+      }
+      const admin = await this.adminModel.findOne({ where: { email } });
+      const { id, role, status } = admin?.dataValues;
+      const payload = { id, role, status };
+      const accessToken = await this.tokenService.generateAccessToken(payload);
+      const refreshToken =
+        await this.tokenService.generateRefreshToken(payload);
+      writeToCookie(res, 'refreshTokenAdmin', refreshToken);
+      return {
+        statusCode: 200,
+        message: 'success',
         data: {
-          accessToken,
-          admin: {
-            id: admin.id,
-            full_name: admin.full_name,
-            email: admin.email,
-            role: admin.role,
-          },
+          accessToken
         },
       };
+      
     } catch (error) {
       return catchError(error);
     }
@@ -136,7 +159,7 @@ export class AdminService {
 
   async logout(res: Response) {
     try {
-      clearCookie(res, 'refreshToken');
+      clearCookie(res, 'refreshTokenAdmin');
       return {
         statusCode: 200,
         message: 'Logout successful',

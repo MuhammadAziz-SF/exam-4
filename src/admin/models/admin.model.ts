@@ -23,39 +23,39 @@ export class Admin extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  full_name: string;
+  declare full_name: string;
 
   @Column({
     type: DataType.STRING,
     unique: true,
     allowNull: false,
   })
-  email: string;
+  declare email: string;
 
   @Column({
     type: DataType.STRING,
     unique: true,
     allowNull: false,
   })
-  phone_number: string;
+  declare phone_number: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  hashed_password: string;
+  declare hashed_password: string;
 
   @Column({
     type: DataType.ENUM(...Object.values(Roles)),
     allowNull: false,
     defaultValue: Roles.ADMIN,
   })
-  role: Roles;
+  declare role: Roles;
 
   @Column({
     type: DataType.ENUM(...Object.values(Status)),
     allowNull: false,
     defaultValue: Status.ACTIVE,
   })
-  status: Status;
+  declare status: Status;
 }

@@ -1,61 +1,72 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
-import { Status } from 'src/enum';
-@Table({ tableName: 'products', timestamps: true })
+import { Column, DataType, Model, Table, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { ProductStatus } from 'src/enum';
+import { v4 as uuidv4 } from 'uuid';
+import { User } from '../../users/entities/user.entity';
+import { Category } from '../../categories/entities/category.entity';
+
+@Table({ tableName: 'products', timestamps: true})
 export class Product extends Model {
   @Column({
     type: DataType.UUID,
     primaryKey: true,
-    defaultValue: DataType.UUIDV4, 
-    allowNull: false,
+    defaultValue: () => uuidv4(),
   })
-  // id: string;
+  declare id: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  name: string;
+  declare name: string;
 
   @Column({
     type: DataType.DECIMAL,
     allowNull: false,
   })
-  price: number;
+  declare price: number;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  description: string;
+  declare description: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  pictures: string;
+  declare pictures: string;
 
   @Column({
     type: DataType.BIGINT,
     allowNull: false,
   })
-  quantity: bigint;
+  declare quantity: bigint;
 
   @Column({
-    type: DataType.ENUM(Status.ACTIVE, Status.INACTIVE),
+    type: DataType.ENUM(ProductStatus.EXISTS, ProductStatus.NOT_EXISTS),
     allowNull: false,
-    defaultValue: Status.ACTIVE,
+    defaultValue: ProductStatus.EXISTS,
   })
-  status: string;
+  declare status: ProductStatus;
 
+  @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,
     allowNull: false,
   })
-  seller_id: string;
+  declare seller_id: string;
 
+  @ForeignKey(() => Category)
   @Column({
-    type: DataType.STRING,
+    type: DataType.UUID,
     allowNull: false,
   })
-  category_type: string;
+  declare category_id: string;
+
+  @BelongsTo(() => User)
+  declare seller: User;
+
+  @BelongsTo(() => Category)
+  declare category: Category;
 }

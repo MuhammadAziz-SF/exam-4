@@ -1,13 +1,9 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './models/product.model';
 import { InjectModel } from '@nestjs/sequelize';
-import { catchError } from 'src/utils/catch-error'; 
+import { catchError } from 'src/utils/catch-error';
 
 @Injectable()
 export class ProductService {
@@ -41,11 +37,11 @@ export class ProductService {
       });
       return {
         statusCode: 201,
-        message: 'Admin created successfully',
+        message: 'Product created successfully',
         data: newProduct,
       };
     } catch (error) {
-      return catchError(error)
+      return catchError(error);
     }
   }
 
@@ -54,11 +50,11 @@ export class ProductService {
       const products = await this.model.findAll();
       return {
         statusCode: 200,
-        message: 'Admin created successfully',
+        message: 'success',
         data: products,
       };
     } catch (error) {
-      return catchError(error)
+      return catchError(error);
     }
   }
 
@@ -70,7 +66,7 @@ export class ProductService {
       }
       return {
         statusCode: 200,
-        message: 'Admin created successfully',
+        message: 'success',
         data: product,
       };
     } catch (error) {
@@ -96,7 +92,7 @@ export class ProductService {
       await product.update(updateProductDto);
       return {
         statusCode: 200,
-        message: 'Admin created successfully',
+        message: 'success',
         data: product,
       };
     } catch (error) {
@@ -113,7 +109,7 @@ export class ProductService {
       await product.destroy();
       return {
         statusCode: 200,
-        message: 'Admin deleted successfully',
+        message: 'success',
       };
     } catch (error) {
       return catchError(error);
