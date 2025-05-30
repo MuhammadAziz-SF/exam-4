@@ -54,11 +54,14 @@ export class ProductService {
   }
 
   async findOne(id: number) {
+<<<<<<< HEAD
     const product = await this.model.findByPk(id);
     if (!product) {
       throw new ConflictException('Product not found');
     }
     return product;
+=======
+>>>>>>> 40fa86b59e2eca815e402f20022ff479baa3ee17
     try {
       const product = await this.model.findByPk(id);
       if (!product) {
