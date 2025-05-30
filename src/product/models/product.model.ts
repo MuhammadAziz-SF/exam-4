@@ -1,10 +1,10 @@
 import { Column, DataType, Model, Table, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import { Status } from 'src/enum';
+import { ProductStatus } from 'src/enum';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
 
-@Table({ tableName: 'products' })
+@Table({ tableName: 'products', timestamps: true})
 export class Product extends Model {
   @Column({
     type: DataType.UUID,
@@ -44,11 +44,11 @@ export class Product extends Model {
   declare quantity: bigint;
 
   @Column({
-    type: DataType.ENUM(Status.ACTIVE, Status.INACTIVE),
+    type: DataType.ENUM(ProductStatus.EXISTS, ProductStatus.NOT_EXISTS),
     allowNull: false,
-    defaultValue: Status.ACTIVE,
+    defaultValue: ProductStatus.EXISTS,
   })
-  declare status: Status;
+  declare status: ProductStatus;
 
   @ForeignKey(() => User)
   @Column({
@@ -63,18 +63,6 @@ export class Product extends Model {
     allowNull: false,
   })
   declare category_id: string;
-
-  @Column({
-    type: DataType.DATE,
-    defaultValue: DataType.NOW,
-  })
-  declare created_at: Date;
-
-  @Column({
-    type: DataType.DATE,
-    defaultValue: DataType.NOW,
-  })
-  declare updated_at: Date;
 
   @BelongsTo(() => User)
   declare seller: User;

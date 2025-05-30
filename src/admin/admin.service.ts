@@ -96,7 +96,7 @@ export class AdminService {
     }
   }
 
-  async login(loginDto: LoginDto, res: Response) {
+  async login(loginDto: LoginDto) {
     try {
       const { email, password } = loginDto;
   
@@ -118,7 +118,7 @@ export class AdminService {
 
       const otp = generateOTP();
       await this.mailService.sendOtp(admin.email, String(otp));
-      await this.cacheManager.set(email, otp, 120);
+      await this.cacheManager.set(email, otp, 300);
       return {
         statusCode: 200,
         message: 'success',

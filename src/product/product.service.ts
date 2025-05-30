@@ -7,6 +7,8 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './models/product.model';
 import { InjectModel } from '@nestjs/sequelize';
+import { catchError } from 'src/utils/catch-error';
+
 
 @Injectable()
 export class ProductService {
@@ -40,35 +42,37 @@ export class ProductService {
       });
       return newProduct;
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error)
     }
   }
 
   async findAll() {
-    try{
-      const products = await this.model.findAll()
+    try {
+      const products = await this.model.findAll();
       return products;
-
-    }catch(error){
-      throw new InternalServerErrorException(error.message);
+    } catch (error) {
+      return catchError(error)
     }
   }
 
   async findOne(id: number) {
-    const product = await this.model.findByPk(id);
-    if(!product){
-      throw new ConflictException('Product not found')
-    }
-    return product;
-  }
-
-  async update(id: number, updateProductDto: UpdateProductDto) {
-    try{
+    try {
       const product = await this.model.findByPk(id);
       if (!product) {
         throw new ConflictException('Product not found');
       }
-      
+      return product;
+    } catch (error) {
+      return catchError(error)
+    }
+  }
+
+  async update(id: number, updateProductDto: UpdateProductDto) {
+    try {
+      const product = await this.model.findByPk(id);
+      if (!product) {
+        throw new ConflictException('Product not found');
+      }
 
       const { name } = updateProductDto;
       if (name && name !== product.name) {
@@ -80,23 +84,21 @@ export class ProductService {
 
       await product.update(updateProductDto);
       return product;
-
-    }catch(error){
-      throw new InternalServerErrorException(error.message);
+    } catch (error) {
+      return catchError(error)
     }
   }
 
   async remove(id: number) {
-    try{
+    try {
       const product = await this.model.findByPk(id);
       if (!product) {
         throw new ConflictException('Product not found');
       }
       await product.destroy();
-      return {}
-    
-    }catch(error){
-    throw new InternalServerErrorException(error.message);
+      return {};
+    } catch (error) {
+      return catchError(error)
     }
   }
 }

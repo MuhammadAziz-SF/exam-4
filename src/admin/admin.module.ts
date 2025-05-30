@@ -8,11 +8,11 @@ import { Admin } from './models/admin.model';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { RolesGuard } from '../guards/roles.guard';
 import { AdminService } from './admin.service';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
 import { TokenService } from '../services/jwt-gen';
 import { CacheModule } from '@nestjs/cache-manager';
+import { MailModule } from 'src/mail/email.module';
+import { MailService } from 'src/mail/email.service';
 
 @Module({
   imports: [
@@ -23,34 +23,11 @@ import { CacheModule } from '@nestjs/cache-manager';
     }),
     SequelizeModule.forFeature([Admin]),
     CacheModule.register(),
-    MailerModule.forRoot({
-      transport: {
-        host: config.MAIL_HOST,
-        port: config.MAIL_PORT,
-        secure: false,
-        auth: {
-          user: config.MAIL_USER,
-          pass: config.MAIL_PASS,
-        },
-        tls: {
-          rejectUnauthorized: false,
-        },
-        logger: false
-      },
-      defaults: {
-        from: config.MAIL_FROM,
-      },
-      template: {
-        dir: join(__dirname, 'templates'),
-        adapter: new HandlebarsAdapter(),
-        options: {
-          strict: true,
-        },
-      },
-    }),
+    MailModule,
+    
   ],
   controllers: [AdminController],
-  providers: [AdminService, JwtStrategy, RolesGuard, TokenService],
+  providers: [AdminService, JwtStrategy, RolesGuard, TokenService, MailService],
   exports: [JwtStrategy, PassportModule, RolesGuard, TokenService]
 })
 export class AdminModule {}

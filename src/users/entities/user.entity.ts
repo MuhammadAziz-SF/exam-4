@@ -37,6 +37,18 @@ export class User extends Model {
   declare hashed_password: string;
 
   @Column({
+    type: DataType.DATE,
+    allowNull: false
+  })
+  declare date_of_birth: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  declare address: string;
+
+  @Column({
     type: DataType.ENUM(Roles.BUYER, Roles.DELIVERY_AGENT, Roles.MANAGER, Roles.SELLER, Roles.SUPPORT),
     allowNull: false,
     defaultValue: Roles.BUYER,
@@ -49,18 +61,6 @@ export class User extends Model {
     defaultValue: Status.ACTIVE,
   })
   declare status: Status;
-
-  @Column({
-    type: DataType.DATE,
-    defaultValue: DataType.NOW,
-  })
-  declare created_at: Date;
-
-  @Column({
-    type: DataType.DATE,
-    defaultValue: DataType.NOW,
-  })
-  declare updated_at: Date;
 
   @HasMany(() => Product)
   declare products: Product[];
