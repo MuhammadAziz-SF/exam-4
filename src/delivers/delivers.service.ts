@@ -3,6 +3,7 @@ import { CreateDeliverDto } from './dto/create-deliver.dto';
 import { UpdateDeliverDto } from './dto/update-deliver.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { Delivers } from './model/delivery.model';
+import { catchError } from 'src/utils/catch-error';
 
 @Injectable()
 export class DeliversService {
@@ -17,7 +18,7 @@ export class DeliversService {
       const deliver = await this.model.create(deliverData as any);
       return deliver;
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error)
     }
   }
 
@@ -25,7 +26,7 @@ export class DeliversService {
     try {
       return this.model.findAll();
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error)
     }
   }
 
@@ -37,7 +38,7 @@ export class DeliversService {
       }
       return deliver;
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error)
     }
   }
 
@@ -54,7 +55,7 @@ export class DeliversService {
       await deliver.update(updateData as any);
       return deliver;
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error)
     }
   }
 
@@ -63,7 +64,7 @@ export class DeliversService {
       const deliver = await this.findOne(id);
       await deliver.destroy();
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error)
     }
   }
 }

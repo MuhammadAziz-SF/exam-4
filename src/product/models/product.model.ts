@@ -1,6 +1,6 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { Status } from 'src/enum';
-@Table({ tableName: 'products' })
+@Table({ tableName: 'products', timestamps: true })
 export class Product extends Model {
   @Column({
     type: DataType.UUID,

@@ -7,6 +7,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './models/product.model';
 import { InjectModel } from '@nestjs/sequelize';
+import { catchError } from 'src/utils/catch-error'; 
 
 @Injectable()
 export class ProductService {
@@ -38,18 +39,26 @@ export class ProductService {
         seller_id,
         category_type,
       });
-      return newProduct;
+      return {
+        statusCode: 201,
+        message: 'Admin created successfully',
+        data: newProduct,
+      };
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error)
     }
   }
 
   async findAll() {
     try {
       const products = await this.model.findAll();
-      return products;
+      return {
+        statusCode: 200,
+        message: 'Admin created successfully',
+        data: products,
+      };
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error)
     }
   }
 
@@ -59,9 +68,13 @@ export class ProductService {
       if (!product) {
         throw new ConflictException('Product not found');
       }
-      return product;
+      return {
+        statusCode: 200,
+        message: 'Admin created successfully',
+        data: product,
+      };
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error);
     }
   }
 
@@ -81,9 +94,13 @@ export class ProductService {
       }
 
       await product.update(updateProductDto);
-      return product;
+      return {
+        statusCode: 200,
+        message: 'Admin created successfully',
+        data: product,
+      };
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error);
     }
   }
 
@@ -94,9 +111,12 @@ export class ProductService {
         throw new ConflictException('Product not found');
       }
       await product.destroy();
-      return {};
+      return {
+        statusCode: 200,
+        message: 'Admin deleted successfully',
+      };
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error);
     }
   }
 }
