@@ -112,7 +112,8 @@ export class AdminService {
       };
 
       const accessToken = await this.tokenService.generateAccessToken(payload);
-      const refreshToken = await this.tokenService.generateRefreshToken(payload);
+      const refreshToken =
+        await this.tokenService.generateRefreshToken(payload);
 
       writeToCookie(res, 'refreshToken', refreshToken);
 

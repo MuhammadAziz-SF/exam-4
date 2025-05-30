@@ -11,12 +11,12 @@ import {
   IsInt,
 } from 'class-validator';
 
-export enum StoreStatus{
-    OPEN = 'open',
-    CLOSED = 'closed',
-    MAINTENANCE = 'maintenance',
-    PAUSED = 'paused',
-    INACTIVE = 'inactive'
+export enum StoreStatus {
+  OPEN = 'open',
+  CLOSED = 'closed',
+  MAINTENANCE = 'maintenance',
+  PAUSED = 'paused',
+  INACTIVE = 'inactive',
 }
 export class CreateStoreDto {
   @IsString()

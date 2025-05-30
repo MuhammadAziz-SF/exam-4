@@ -15,7 +15,7 @@ export enum Roles {
 
 export enum ProductStatus {
   EXISTS = 'exists',
-  NOT_EXISTS = 'not exists'
+  NOT_EXISTS = 'not exists',
 }
 
 export enum DeliveryStatus {
@@ -23,13 +23,13 @@ export enum DeliveryStatus {
   PREPARING = 'preparing',
   DELIVERING = 'delivering',
   COMPLETED = 'completed',
-  REJECTED = 'rejected'
+  REJECTED = 'rejected',
 }
 
 export enum StoreStatus {
-  OPEN = "open",
-  CLOSED = "closed",
-  MAINTENANCE = "maintenance",
-  PAUSED = "paused",
-  INACTIVE = "inactive",
+  OPEN = 'open',
+  CLOSED = 'closed',
+  MAINTENANCE = 'maintenance',
+  PAUSED = 'paused',
+  INACTIVE = 'inactive',
 }

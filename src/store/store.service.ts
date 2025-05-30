@@ -53,11 +53,14 @@ export class StoreService {
 
   async update(id: number, updateStoreDto: UpdateStoreDto) {
     try {
-      const store = await this.model.update(updateStoreDto, { where: { id }, returning: true});
+      const store = await this.model.update(updateStoreDto, {
+        where: { id },
+        returning: true,
+      });
       return {
         statusCode: 200,
         message: 'success',
-        data: store[1][0]
+        data: store[1][0],
       };
     } catch (error) {
       throw new NotFoundException(`Not found by id ${id}`);

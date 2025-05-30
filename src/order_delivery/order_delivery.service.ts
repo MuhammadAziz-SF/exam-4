@@ -1,16 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CreateOrderDeliveryDto } from './dto/create-order_delivery.dto';
+import { UpdateOrderDeliveryDto } from './dto/update-order_delivery.dto';
 import { InjectModel } from '@nestjs/sequelize';
-import { Category } from './entities/category.entity';
+import { OrderDelivery } from './entities/order_delivery.entity';
 import { InternalServerErrorException } from '@nestjs/common';
 @Injectable()
-export class CategoriesService {
-  constructor(@InjectModel(Category) private model: typeof Category) {}
-  async create(createCategoryDto: CreateCategoryDto) {
+export class OrderDeliveryService {
+  constructor(
+    @InjectModel(OrderDelivery) private model: typeof OrderDelivery,
+  ) {}
+  async create(createOrderDeliveryDto: CreateOrderDeliveryDto) {
     try {
-      const newCategory = await this.model.create({ ...createCategoryDto });
-      return newCategory;
+      const newOrderDelivery = await this.model.create({
+        ...createOrderDeliveryDto,
+      });
+      return newOrderDelivery;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
@@ -18,8 +22,8 @@ export class CategoriesService {
 
   async findAll() {
     try {
-      const categories = await this.model.findAll();
-      return categories;
+      const order_delivery = await this.model.findAll();
+      return order_delivery;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
@@ -27,20 +31,20 @@ export class CategoriesService {
 
   async findOne(id: number) {
     try {
-      const categories = await this.model.findByPk(id);
-      return categories;
+      const order_delivery = await this.model.findByPk(id);
+      return order_delivery;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
 
-  async update(id: number, updateCategoryDto: UpdateCategoryDto) {
+  async update(id: number, updateOrderDeliveryDto: UpdateOrderDeliveryDto) {
     try {
-      const categories = await this.model.update(updateCategoryDto, {
+      const order_delivery = await this.model.update(updateOrderDeliveryDto, {
         where: { id },
         returning: true,
       });
-      return categories[1][0];
+      return order_delivery;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

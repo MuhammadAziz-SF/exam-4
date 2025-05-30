@@ -11,7 +11,6 @@ import { User } from 'src/users/entity/user.entitiy';
 
 @Table({ tableName: 'store' })
 export class Store extends Model {
-
   @ForeignKey(() => User)
   @Column({ type: DataType.INTEGER })
   seller_id: number;

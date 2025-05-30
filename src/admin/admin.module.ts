@@ -19,7 +19,7 @@ import { TokenService } from '../services/jwt-gen';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: config.JWT_ACCESS_K,
-      signOptions: { expiresIn: config.JWT_ACCESS_T }
+      signOptions: { expiresIn: config.JWT_ACCESS_T },
     }),
     SequelizeModule.forFeature([Admin]),
     MailerModule.forRoot({
@@ -34,7 +34,7 @@ import { TokenService } from '../services/jwt-gen';
         tls: {
           rejectUnauthorized: false,
         },
-        logger: false
+        logger: false,
       },
       defaults: {
         from: config.MAIL_FROM,
@@ -49,7 +49,13 @@ import { TokenService } from '../services/jwt-gen';
     }),
   ],
   controllers: [AdminController],
-  providers: [AdminService, JwtStrategy, RolesGuard, EmailService, TokenService],
-  exports: [JwtStrategy, PassportModule, RolesGuard, TokenService]
+  providers: [
+    AdminService,
+    JwtStrategy,
+    RolesGuard,
+    EmailService,
+    TokenService,
+  ],
+  exports: [JwtStrategy, PassportModule, RolesGuard, TokenService],
 })
 export class AdminModule {}

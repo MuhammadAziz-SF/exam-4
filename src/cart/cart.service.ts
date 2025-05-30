@@ -1,26 +1,85 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
+import { InjectModel } from '@nestjs/sequelize';
+import { Cart } from './model/cart.model';
+import { catchError } from 'rxjs';
 
 @Injectable()
 export class CartService {
-  create(createCartDto: CreateCartDto) {
-    return 'This action adds a new cart';
+  constructor(@InjectModel(Cart) private model: typeof Cart) {}
+
+  async create(createCartDto: CreateCartDto) {
+    try {
+      const cart = await this.model.create({ ...createCartDto });
+      return {
+        statusCode: 201,
+        message: 'success',
+        data: cart,
+      };
+    } catch (error) {
+      catchError(error);
+    }
   }
 
-  findAll() {
-    return `This action returns all cart`;
+  async findAll() {
+    try {
+      const carts = await this.model.findAll();
+      return {
+        statusCode: 200,
+        message: 'success',
+        data: carts,
+      };
+    } catch (error) {
+      catchError(error);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cart`;
+  async findOne(id: number) {
+    try {
+      const cart = await this.model.findByPk(id);
+      if (!cart) {
+        return {
+          statusCode: 404,
+          message: 'Not found',
+        };
+      }
+      return {
+        statusCode: 200,
+        message: 'success',
+        data: cart,
+      };
+    } catch (error) {
+      catchError(error);
+    }
   }
 
-  update(id: number, updateCartDto: UpdateCartDto) {
-    return `This action updates a #${id} cart`;
+  async update(id: number, updateCartDto: UpdateCartDto) {
+    try {
+      const cart = await this.model.update(updateCartDto, {
+        where: { id },
+        returning: true,
+      });
+      return {
+        statusCode: 200,
+        message: 'success',
+        data: cart[1][0],
+      };
+    } catch (error) {
+      catchError(error);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cart`;
+  async remove(id: number) {
+    try {
+      const cart = await this.model.destroy({ where: { id } });
+      return {
+        statusCode: 200,
+        message: 'success',
+        data: {},
+      };
+    } catch (error) {
+      catchError(error);
+    }
   }
 }

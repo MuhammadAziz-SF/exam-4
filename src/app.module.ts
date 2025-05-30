@@ -4,15 +4,11 @@ import config from './config';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductModule } from './product/product.module';
-
-import { StoreModule } from './store/store.module';
-import { User } from './users/entity/user.entitiy';
-import { Store } from './store/model/store.model';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { StoreModule } from './store/store.module';
 import { CartModule } from './cart/cart.module';
-
 
 @Module({
   imports: [
@@ -26,11 +22,12 @@ import { CartModule } from './cart/cart.module';
       synchronize: true,
       logging: false,
       autoLoadModels: true,
-      models: [User, Store],
+      models: [],
     }),
     UsersModule,
     CategoriesModule,
     ProductModule,
+    CartModule,
     StoreModule,
     JwtModule.register({
       secret: config.JWT_ACCESS_K,
@@ -40,7 +37,6 @@ import { CartModule } from './cart/cart.module';
     UsersModule,
     CategoriesModule,
     ProductModule,
-    CartModule,
   ],
   providers: [JwtStrategy],
 })

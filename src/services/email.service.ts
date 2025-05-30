@@ -25,7 +25,7 @@ export class EmailService implements OnModuleInit {
   async sendOTP(email: string, otp: number) {
     try {
       this.logger.log(`Attempting to send OTP to ${email}`);
-      
+
       await this.mailerService.sendMail({
         to: email,
         from: config.MAIL_FROM,
