@@ -37,238 +37,76 @@ import {
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.SUPER_ADMIN)
-  @ApiOperation({ 
-    summary: 'Create a new admin',
-    description: 'Creates a new admin user. Only super admin can create new admins.'
-  })
-  @ApiBody({ 
-    type: CreateAdminDto,
-    description: 'Admin creation data'
-  })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Admin created successfully',
-    type: CreateAdminDto
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid input data'
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - Invalid or missing token'
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    description: 'Forbidden - Insufficient permissions'
-  })
-  create(@Body() createAdminDto: CreateAdminDto) {
-    return this.adminService.createAdmin(createAdminDto);
+  @ApiOperation({ summary: 'Super admin login' })
+  @ApiResponse({ status: 200, description: 'Super admin login successful' })
+  @Post('super-admin/login')
+  superAdminLogin(@Body() loginDto: LoginDto, @Res() res: Response) {
+    return this.adminService.superAdminLogin(loginDto, res);
   }
 
-  @Post('/login')
-  @ApiOperation({ 
-    summary: 'Admin login',
-    description: 'Authenticates an admin user and returns a JWT token'
-  })
-  @ApiBody({ 
-    type: LoginDto,
-    description: 'Admin login credentials'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Login successful - Returns JWT token',
-    type: LoginDto
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid credentials'
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - Invalid credentials'
-  })
-  login(@Body() loginDto: LoginDto) {
-    return this.adminService.login(loginDto);
+  @ApiOperation({ summary: 'Admin login' })
+  @ApiResponse({ status: 200, description: 'OTP sent successfully' })
+  @Post('login')
+  login(@Body() loginDto: LoginDto, @Res() res: Response) {
+    return this.adminService.login(loginDto, res);
   }
 
-  @Post('/confirm-login')
-  @ApiOperation({ 
-    summary: 'Confirm admin login with OTP',
-    description: 'Confirms admin login using OTP sent to email'
-  })
-  @ApiBody({ 
-    type: ConfirmSignInAdminDto,
-    description: 'OTP confirmation data'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Login confirmed successfully',
-    type: ConfirmSignInAdminDto
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid OTP or OTP expired'
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - Invalid OTP'
-  })
+  @ApiOperation({ summary: 'Confirm admin login' })
+  @ApiResponse({ status: 200, description: 'Login confirmed successfully' })
+  @Post('confirm-login')
   confirmLogin(@Body() confirmSignInAdminDto: ConfirmSignInAdminDto, @Res() res: Response) {
     return this.adminService.confirmLogin(confirmSignInAdminDto, res);
   }
 
+  @ApiOperation({ summary: 'Admin logout' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ 
-    summary: 'Admin logout',
-    description: 'Logs out the current admin user and invalidates the session'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Logout successful'
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - Invalid or missing token'
-  })
   logout(@Res() res: Response) {
     return this.adminService.logout(res);
   }
 
+  @ApiOperation({ summary: 'Create new admin' })
+  @ApiResponse({ status: 201, description: 'Admin created successfully' })
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleEnum.SUPER_ADMIN)
+  create(@Body() createAdminDto: CreateAdminDto, @Res() res: Response) {
+    return this.adminService.createAdmin(createAdminDto, res);
+  }
+
+  @ApiOperation({ summary: 'Get all admins' })
+  @ApiResponse({ status: 200, description: 'Return all admins' })
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPER_ADMIN)
-  @ApiOperation({ 
-    summary: 'Get all admins',
-    description: 'Retrieves a list of all admin users. Only super admin can access this endpoint.'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'List of all admins',
-    type: [CreateAdminDto]
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - Invalid or missing token'
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    description: 'Forbidden - Insufficient permissions'
-  })
-  findAll() {
-    return this.adminService.findAll();
+  findAll(@Res() res: Response) {
+    return this.adminService.findAll(res);
   }
 
+  @ApiOperation({ summary: 'Get admin by ID' })
+  @ApiResponse({ status: 200, description: 'Return admin by ID' })
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPER_ADMIN)
-  @ApiOperation({ 
-    summary: 'Get admin by ID',
-    description: 'Retrieves a specific admin user by their ID. Only super admin can access this endpoint.'
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'Admin ID',
-    type: 'string',
-    example: '1'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Admin details',
-    type: CreateAdminDto
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Admin not found'
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - Invalid or missing token'
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    description: 'Forbidden - Insufficient permissions'
-  })
-  findOne(@Param('id') id: string) {
-    return this.adminService.findOne(id);
+  findOne(@Param('id') id: string, @Res() res: Response) {
+    return this.adminService.findOne(id, res);
   }
 
+  @ApiOperation({ summary: 'Update admin' })
+  @ApiResponse({ status: 200, description: 'Admin updated successfully' })
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPER_ADMIN)
-  @ApiOperation({ 
-    summary: 'Update admin',
-    description: 'Updates a specific admin user. Only super admin can update admin details.'
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'Admin ID',
-    type: 'string',
-    example: '1'
-  })
-  @ApiBody({ 
-    type: UpdateAdminDto,
-    description: 'Admin update data'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Admin updated successfully',
-    type: UpdateAdminDto
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Admin not found'
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid input data'
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - Invalid or missing token'
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    description: 'Forbidden - Insufficient permissions'
-  })
-  update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
-    return this.adminService.update(id, updateAdminDto);
+  update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto, @Res() res: Response) {
+    return this.adminService.update(id, updateAdminDto, res);
   }
 
+  @ApiOperation({ summary: 'Delete admin' })
+  @ApiResponse({ status: 200, description: 'Admin deleted successfully' })
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPER_ADMIN)
-  @ApiOperation({ 
-    summary: 'Delete admin',
-    description: 'Deletes a specific admin user. Only super admin can delete admin users.'
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'Admin ID',
-    type: 'string',
-    example: '1'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Admin deleted successfully'
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Admin not found'
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - Invalid or missing token'
-  })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    description: 'Forbidden - Insufficient permissions'
-  })
-  remove(@Param('id') id: string) {
-    return this.adminService.remove(id);
+  remove(@Param('id') id: string, @Res() res: Response) {
+    return this.adminService.remove(id, res);
   }
 }

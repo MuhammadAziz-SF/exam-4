@@ -50,7 +50,7 @@ export class User extends Model {
 
   @Column({
     type: DataType.ENUM(Roles.BUYER, Roles.DELIVERY_AGENT, Roles.MANAGER, Roles.SELLER, Roles.SUPPORT),
-    allowNull: false,
+    allowNull: true,
     defaultValue: Roles.BUYER,
   })
   declare role: Roles;

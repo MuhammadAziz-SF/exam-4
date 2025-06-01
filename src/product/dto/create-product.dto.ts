@@ -34,7 +34,7 @@ export class CreateProductDto {
 
   @IsEnum(Status)
   @IsNotEmpty()
-  status: string;
+  status: Status;
 
   @IsUUID()
   @IsNotEmpty()

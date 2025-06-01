@@ -3,7 +3,10 @@ import {
   Injectable,
   InternalServerErrorException,
   BadRequestException,
-  UnauthorizedException
+  UnauthorizedException,
+  ForbiddenException,
+  NotFoundException,
+  Inject
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -20,27 +23,71 @@ import { Cache } from 'cache-manager';
 import { ConfirmLoginDto } from './dto/confirm-login.dto';
 import { writeToCookie, clearCookie } from 'src/utils/cookie';
 import { Response } from 'express';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class UsersService {
   mailService: any;
-  cacheManager: any;
   tokenService: any;
-  constructor(@InjectModel(User) private model: typeof User) {}
+  constructor(
+    @InjectModel(User) private model: typeof User,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
+  ) {}
 
-  async SignInUser(logInDto: LogInDto){
+  async create(createUserDto: CreateUserDto) {
     try {
-      const{email, password} = logInDto;
+      const { email, password, phone_number, role } = createUserDto;
 
-      const user = await this.model.findOne({where: {email}});
+      // Validate role
+      if (role !== Roles.ADMIN && role !== Roles.SUPER_ADMIN) {
+        throw new ForbiddenException('Only admin or super admin roles are allowed');
+      }
 
-      if(!user){
-        throw new BadRequestException('Password or email incorrect')
+      const existingUser = await this.model.findOne({
+        where: {
+          [Op.or]: [{ email }, { phone_number }],
+        },
+      });
+
+      if (existingUser) {
+        throw new ConflictException(
+          existingUser.email === email
+            ? 'Email already exists'
+            : 'Phone number already exists',
+        );
+      }
+
+      const hashedPassword = await encrypt(password);
+      const newUser = await this.model.create({
+        ...createUserDto,
+        hashed_password: hashedPassword,
+        role: role || Roles.ADMIN
+      });
+
+      const { hashed_password, ...result } = newUser.toJSON();
+      return {
+        statusCode: 201,
+        message: 'User created successfully',
+        data: result
+      };
+    } catch (error) {
+      return catchError(error);
+    }
+  }
+
+  async SignInUser(logInDto: LogInDto) {
+    try {
+      const { email, password } = logInDto;
+
+      const user = await this.model.findOne({ where: { email } });
+
+      if (!user) {
+        throw new BadRequestException('Password or email incorrect');
       }
       const isPasswordValid = await decrypt(password, user.hashed_password);
 
-      if(!isPasswordValid){
-        throw new UnauthorizedException(Error)
+      if (!isPasswordValid) {
+        throw new UnauthorizedException(Error);
       }
 
       const otp = generateOTP();
@@ -50,7 +97,7 @@ export class UsersService {
         statusCode: 200,
         message: 'success',
         data: email,
-      }
+      };
     } catch (error) {
       return catchError(error);
     }
@@ -58,79 +105,117 @@ export class UsersService {
 
   async confirmLogin(confirmLoginDto: ConfirmLoginDto, res: Response): Promise<object> {
     try {
-      const {email, otp} = confirmLoginDto;
+      const { email, otp } = confirmLoginDto;
       const hasUser = await this.cacheManager.get(email);
-      if(!hasUser || hasUser != otp){
+      if (!hasUser || hasUser != otp) {
         throw new BadRequestException('Otp expired');
       }
-      const user = await this.model.findOne({where: {email}});
-      const {id, role} = user?.dataValues;
-      const payload = {id, role};
+      const user = await this.model.findOne({ where: { email } });
+      const { id, role } = user?.dataValues;
+      const payload = { id, role };
       const accessToken = await this.tokenService.generateAccessToken(payload);
       const refreshToken = await this.tokenService.generateRefreshToken(payload);
       writeToCookie(res, 'refreshTokenUser', refreshToken);
-      return{
+      return {
         statusCode: 200,
         message: 'success',
         data: accessToken
-      }
+      };
     } catch (error) {
       return catchError(error);
     }
   }
 
-  async logOut(res: Response){
+  async logOut(res: Response) {
     try {
       clearCookie(res, 'refreshTokenUser');
-      return{
+      return {
         statusCode: 200,
         message: 'Logout successfully',
       };
     } catch (error) {
-      return catchError(error)
+      return catchError(error);
     }
   }
 
   async findAll() {
-    const users = await this.model.findAll();
-    return {
-      statusCode: 200,
-      message: 'success',
-      data: users,
-    };
+    try {
+      const users = await this.model.findAll({
+        attributes: { exclude: ['hashed_password'] },
+      });
+      return {
+        statusCode: 200,
+        message: 'success',
+        data: users,
+      };
+    } catch (error) {
+      return catchError(error);
+    }
   }
 
   async findOne(id: number) {
-    const user = await this.model.findByPk(id);
-    if (!user) {
+    try {
+      const user = await this.model.findByPk(id, {
+        attributes: { exclude: ['hashed_password'] },
+      });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
       return {
-        statusCode: 404,
-        message: 'Not found',
+        statusCode: 200,
+        message: 'success',
+        data: user,
       };
+    } catch (error) {
+      return catchError(error);
     }
-    return {
-      statusCode: 200,
-      message: 'success',
-      data: user,
-    };
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const updateUser = await this.model.update(updateUserDto, {
-      where: { id },
-      returning: true,
-    });
-    if (updateUser[0] === 0) {
+    try {
+      const user = await this.model.findByPk(id);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (updateUserDto.password) {
+        const hashedPassword = await encrypt(updateUserDto.password);
+        await user.update({
+          ...updateUserDto,
+          hashed_password: hashedPassword,
+        });
+      } else {
+        await user.update(updateUserDto);
+      }
+
+      const updatedUser = await this.model.findByPk(id, {
+        attributes: { exclude: ['hashed_password'] },
+      });
+
       return {
-        statusCode: 404,
-        message: 'Not found',
+        statusCode: 200,
+        message: 'User updated successfully',
+        data: updatedUser,
       };
+    } catch (error) {
+      return catchError(error);
     }
-    return updateUser[1][0];
   }
 
   async remove(id: number) {
-    await this.model.destroy({ where: { id } });
-    return {};
+    try {
+      const user = await this.model.findByPk(id);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      await user.destroy();
+      return {
+        statusCode: 200,
+        message: 'User deleted successfully',
+      };
+    } catch (error) {
+      return catchError(error);
+    }
   }
 }

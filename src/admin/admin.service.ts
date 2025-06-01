@@ -60,7 +60,50 @@ export class AdminService {
     }
   }
 
-  async createAdmin(createAdminDto: CreateAdminDto): Promise<object> {
+  async superAdminLogin(loginDto: LoginDto, res: Response) {
+    try {
+      const { email, password } = loginDto;
+  
+      const admin = await this.adminModel.findOne({ where: { email } });
+  
+      if (!admin) {
+        throw new BadRequestException('Invalid credentials');
+      }
+  
+      if (admin.status === Status.INACTIVE) {
+        throw new UnauthorizedException('Account is inactive');
+      }
+
+      if (admin.role !== Roles.SUPER_ADMIN) {
+        throw new UnauthorizedException('Access denied. Super admin access required.');
+      }
+  
+      const isPasswordValid = await decrypt(password, admin.hashed_password);
+  
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const { id, role, status } = admin.dataValues;
+      const payload = { id, role, status };
+      const accessToken = await this.tokenService.generateAccessToken(payload);
+      const refreshToken = await this.tokenService.generateRefreshToken(payload);
+      writeToCookie(res, 'refreshTokenAdmin', refreshToken);
+
+      return res.status(200).json({
+        statusCode: 200,
+        message: 'Super admin login successful',
+        data: {
+          accessToken
+        },
+      });
+
+    } catch (error) {
+      return catchError(error);
+    }
+  }
+
+  async createAdmin(createAdminDto: CreateAdminDto, res: Response): Promise<object> {
     try {
       const { email, phone_number, password } = createAdminDto;
 
@@ -86,17 +129,17 @@ export class AdminService {
       });
 
       const { hashed_password, ...result } = admin.toJSON();
-      return {
+      return res.status(201).json({
         statusCode: 201,
         message: 'Admin created successfully',
         data: result,
-      };
+      });
     } catch (error) {
       return catchError(error);
     }
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, res: Response) {
     try {
       const { email, password } = loginDto;
   
@@ -118,12 +161,12 @@ export class AdminService {
 
       const otp = generateOTP();
       await this.mailService.sendOtp(admin.email, String(otp));
-      await this.cacheManager.set(email, otp, 300);
-      return {
+      await this.cacheManager.set(email, otp, 300000);
+      return res.status(200).json({
         statusCode: 200,
-        message: 'success',
+        message: 'OTP sent successfully',
         data: email,
-      };
+      });
 
     } catch (error) {
       return catchError(error);
@@ -141,16 +184,15 @@ export class AdminService {
       const { id, role, status } = admin?.dataValues;
       const payload = { id, role, status };
       const accessToken = await this.tokenService.generateAccessToken(payload);
-      const refreshToken =
-        await this.tokenService.generateRefreshToken(payload);
+      const refreshToken = await this.tokenService.generateRefreshToken(payload);
       writeToCookie(res, 'refreshTokenAdmin', refreshToken);
-      return {
+      return res.status(200).json({
         statusCode: 200,
-        message: 'success',
+        message: 'Login confirmed successfully',
         data: {
           accessToken
         },
-      };
+      });
       
     } catch (error) {
       return catchError(error);
@@ -160,31 +202,31 @@ export class AdminService {
   async logout(res: Response) {
     try {
       clearCookie(res, 'refreshTokenAdmin');
-      return {
+      return res.status(200).json({
         statusCode: 200,
         message: 'Logout successful',
-      };
+      });
     } catch (error) {
       return catchError(error);
     }
   }
 
-  async findAll() {
+  async findAll(res: Response) {
     try {
       const admins = await this.adminModel.findAll({
         attributes: { exclude: ['hashed_password'] },
       });
-      return {
+      return res.status(200).json({
         statusCode: 200,
         message: 'Success',
         data: admins,
-      };
+      });
     } catch (error) {
       return catchError(error);
     }
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, res: Response) {
     try {
       const admin = await this.adminModel.findByPk(id, {
         attributes: { exclude: ['hashed_password'] },
@@ -192,42 +234,75 @@ export class AdminService {
       if (!admin) {
         throw new NotFoundException('Admin not found');
       }
-      return {
+      return res.status(200).json({
         statusCode: 200,
         message: 'Success',
         data: admin,
-      };
+      });
     } catch (error) {
       return catchError(error);
     }
   }
 
-  async update(id: string, updateAdminDto: UpdateAdminDto) {
+  async update(id: string, updateAdminDto: UpdateAdminDto, res: Response) {
     try {
       const admin = await this.adminModel.findByPk(id);
       if (!admin) {
         throw new NotFoundException('Admin not found');
       }
 
-      if (updateAdminDto.password) {
-        updateAdminDto.password = await encrypt(updateAdminDto.password);
-        delete updateAdminDto.password;
+      // Check if email or phone number already exists for other admins
+      if (updateAdminDto.email || updateAdminDto.phone_number) {
+        const existingAdmin = await this.adminModel.findOne({
+          where: {
+            [Op.and]: [
+              {
+                [Op.or]: [
+                  updateAdminDto.email ? { email: updateAdminDto.email } : {},
+                  updateAdminDto.phone_number ? { phone_number: updateAdminDto.phone_number } : {},
+                ],
+              },
+              { id: { [Op.ne]: id } },
+            ],
+          },
+        });
+
+        if (existingAdmin) {
+          throw new ConflictException(
+            existingAdmin.email === updateAdminDto.email
+              ? 'Email already exists'
+              : 'Phone number already exists',
+          );
+        }
       }
 
-      await admin.update(updateAdminDto);
-      const { hashed_password, ...result } = admin.toJSON();
+      // Handle password update
+      if (updateAdminDto.password) {
+        const hashedPassword = await encrypt(updateAdminDto.password);
+        await admin.update({
+          ...updateAdminDto,
+          hashed_password: hashedPassword,
+        });
+      } else {
+        await admin.update(updateAdminDto);
+      }
 
-      return {
+      // Fetch updated admin without password
+      const updatedAdmin = await this.adminModel.findByPk(id, {
+        attributes: { exclude: ['hashed_password'] },
+      });
+
+      return res.status(200).json({
         statusCode: 200,
         message: 'Admin updated successfully',
-        data: result,
-      };
+        data: updatedAdmin,
+      });
     } catch (error) {
       return catchError(error);
     }
   }
 
-  async remove(id: string) {
+  async remove(id: string, res: Response) {
     try {
       const admin = await this.adminModel.findByPk(id);
       if (!admin) {
@@ -235,10 +310,10 @@ export class AdminService {
       }
 
       await admin.destroy();
-      return {
+      return res.status(200).json({
         statusCode: 200,
         message: 'Admin deleted successfully',
-      };
+      });
     } catch (error) {
       return catchError(error);
     }
