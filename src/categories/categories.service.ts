@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { Category } from './entities/category.entity';
-import { InternalServerErrorException,NotFoundException } from '@nestjs/common';
+import { catchError } from 'src/utils/catch-error';
+
 @Injectable()
 export class CategoriesService {
   constructor(
@@ -11,65 +12,78 @@ export class CategoriesService {
   ){ }
   async create(createCategoryDto: CreateCategoryDto) {
     try {
-      const newCategory=await this.model.create({...createCategoryDto})
+      const category = await this.model.findOne({ where: { name: createCategoryDto.name } });
 
-    return {
-      status:200,
+    if (category) {
+      return {
+        statusCode: 400,
+        message: "Category already exists",
+      };
+    }
+    const newCategory=await this.model.create({...createCategoryDto});
+
+      return {
+      statusCode:201,
       message:'success',
       data:newCategory
     }
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+    return catchError(error)
     }}
 
   async findAll() {
     try {
       const categories=await this.model.findAll();
-    
-      return {
-        status:200,
-        message:"success",
-        data:categories,
-      };
+     return {
+      statusCode:200,
+      message:'success',
+      data:categories
+    }
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error)    
     }}
 
   async findOne(id: number) {
     try {
       const categories=await this.model.findByPk(id)
       if(!categories){
-        throw new Error("category not found");
+        throw new NotFoundException("categories not found")
       }
-      return{
-        status:200,
-        message:'success',
-        data: categories
-      }
+     return {
+      statusCode:200,
+      message:'success',
+      data:categories
+    }
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return catchError(error)
     }}
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
     try {
-      const categories=await this.model.update(updateCategoryDto,{where:{id},returning:true});
-      if (categories === 0) {
-        throw new NotFoundException(`ID ${id} boyicha yangilash amalga oshmadi`);
+      const [updatedCount,updatedRows]=await this.model.update(updateCategoryDto,{where :{id},returning:true,})
+      if(updatedCount===0){
+        throw new NotFoundException()
       }
-    return {
-      status:200,
-      message:'success',
-      data:categories[1][0]
-    }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return {
+        statusCode:200,
+        message:'success',
+        data:updatedRows[0]
+      }    } catch (error) {
+      return catchError(error)
     }}
 
   async remove(id: number) {
     try {
+      const deletedCount=await this.model.destroy({where:{id}})
+      if(deletedCount===0){
+          throw new NotFoundException()
+      }
       await this.model.destroy({where:{id}});
-    return{data:{}}
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }}
+      return {
+        statusCode:200,
+        message:'success',
+        data:{}
+      }    } catch (error) {
+      return catchError(error)
+      }}
 }

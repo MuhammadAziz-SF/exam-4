@@ -1,5 +1,7 @@
-import { Column,Model,Table,DataType } from "sequelize-typescript";
+import { Column,Model,Table,DataType, ForeignKey, BelongsTo } from "sequelize-typescript";
+import { Delivers } from "src/delivers/model/delivery.model";
 import { DeliveryStatus, Status } from "src/enum";
+import { User } from "src/users/entities/user.entity";
 @Table({tableName:'order_delivery'})
 export class OrderDelivery extends Model{
     @Column({
@@ -50,4 +52,25 @@ export class OrderDelivery extends Model{
         defaultValue: DeliveryStatus.RECEIVED,
       })
       delivery_status: string;
+      
+      @ForeignKey(()=>Delivers)
+      @Column({
+        type:DataType.INTEGER
+      })
+      delever_id:number;
+      @BelongsTo(()=>Delivers,{
+        onDelete:"CASCADE",
+        onUpdate:"CASCADE"
+      })
+
+      @ForeignKey(()=>User)
+      @Column({
+        type:DataType.INTEGER
+      })
+      buyer_id:number;
+      @BelongsTo(()=>User,{
+        onDelete:"CASCADE",
+        onUpdate:"CASCADE"
+      })
+      user:User
 }
