@@ -67,7 +67,7 @@ export class OrderItemsService {
   }
 
   async update(id: number, updateOrderItemDto: UpdateOrderItemDto) {
-    const orderItem = await this.model.findByPk(id)
+    const orderItem = await this.model.findByPk(id);
     if (!orderItem) {
       throw new NotFoundException(`ID ${id} bilan order item topilmadi`);
     }
@@ -79,12 +79,15 @@ export class OrderItemsService {
         `Umumiy narx  (${price}) *  (${quantity}) = ${expectedTotal} ga teng bolishi kerak`,
       );
     }
-    const updateOrderItem = await this.model.update({
-      product_id,
-      price,
-      quantity,
-      total_price,
-    });
+    const updateOrderItem = await this.model.update(
+      {
+        product_id,
+        price,
+        quantity,
+        total_price,
+      },
+      { where: { id }, returning: true },
+    );
     return {
       statusCode: 200,
       message: 'success',
