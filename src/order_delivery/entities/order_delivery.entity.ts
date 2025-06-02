@@ -62,7 +62,7 @@ export class OrderDelivery extends Model{
         onDelete:"CASCADE",
         onUpdate:"CASCADE"
       })
-
+      delivers:Delivers
       @ForeignKey(()=>User)
       @Column({
         type:DataType.INTEGER
