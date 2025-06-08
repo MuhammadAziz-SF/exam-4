@@ -1,4 +1,3 @@
-
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 
@@ -9,7 +8,7 @@ export class MailService {
   async sendOtp(email: string, otp: string) {
     await this.mailService.sendMail({
       to: email,
-      subject: 'Assalomu alaykum. Avto ijara saytiga xush kelibsiz!',
+      subject: 'Your OTP for login',
       text: otp,
     });
   }

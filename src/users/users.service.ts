@@ -13,35 +13,31 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './entities/user.entity';
 import { encrypt, decrypt } from 'src/utils/bcrypt-encrypt';
-import { Roles } from 'src/enum';
 import { generateOTP } from 'src/utils/otp-gen';
 import { LogInDto } from './dto/login.dto';
-import { STRING } from 'sequelize';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { catchError } from 'src/utils/catch-error';
-import { Cache } from 'cache-manager';
+import { Cache } from '@nestjs/cache-manager';
 import { ConfirmLoginDto } from './dto/confirm-login.dto';
 import { writeToCookie, clearCookie } from 'src/utils/cookie';
 import { Response } from 'express';
 import { Op } from 'sequelize';
+import { MailService } from 'src/mail/email.service';
+import { TokenService } from 'src/services/jwt-gen';
 
 @Injectable()
 export class UsersService {
-  mailService: any;
-  tokenService: any;
   constructor(
     @InjectModel(User) private model: typeof User,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly mailService: MailService,
+    private readonly tokenService: TokenService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
     try {
-      const { email, password, phone_number, role } = createUserDto;
+      const { email, password, phone_number } = createUserDto;
 
-      // Validate role
-      if (role !== Roles.ADMIN && role !== Roles.SUPER_ADMIN) {
-        throw new ForbiddenException('Only admin or super admin roles are allowed');
-      }
 
       const existingUser = await this.model.findOne({
         where: {
@@ -61,7 +57,6 @@ export class UsersService {
       const newUser = await this.model.create({
         ...createUserDto,
         hashed_password: hashedPassword,
-        role: role || Roles.ADMIN
       });
 
       const { hashed_password, ...result } = newUser.toJSON();
@@ -78,21 +73,23 @@ export class UsersService {
   async SignInUser(logInDto: LogInDto) {
     try {
       const { email, password } = logInDto;
-
+  
       const user = await this.model.findOne({ where: { email } });
-
       if (!user) {
         throw new BadRequestException('Password or email incorrect');
       }
+  
       const isPasswordValid = await decrypt(password, user.hashed_password);
-
       if (!isPasswordValid) {
-        throw new UnauthorizedException(Error);
+        throw new UnauthorizedException('Invalid credentials');
       }
-
+  
       const otp = generateOTP();
-      await this.mailService.sentOtp(user.email, STRING(otp));
-      await this.cacheManager.set(email, otp, 300);
+      await this.mailService.sendOtp(user.email, String(otp));
+      await this.cacheManager.set(email, otp, 900000);
+      
+      
+      
       return {
         statusCode: 200,
         message: 'success',
@@ -102,29 +99,40 @@ export class UsersService {
       return catchError(error);
     }
   }
-
-  async confirmLogin(confirmLoginDto: ConfirmLoginDto, res: Response): Promise<object> {
+  
+  async confirmLogin(confirmLoginDto: ConfirmLoginDto, res: Response): Promise<Response> {
     try {
       const { email, otp } = confirmLoginDto;
-      const hasUser = await this.cacheManager.get(email);
-      if (!hasUser || hasUser != otp) {
-        throw new BadRequestException('Otp expired');
+  
+      const cachedOtp = await this.cacheManager.get(email);
+    
+      if (!cachedOtp || cachedOtp != otp) {
+        throw new BadRequestException('OTP expired or invalid');
       }
+  
       const user = await this.model.findOne({ where: { email } });
-      const { id, role } = user?.dataValues;
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+
+      const { id, role } = user.dataValues;
       const payload = { id, role };
       const accessToken = await this.tokenService.generateAccessToken(payload);
       const refreshToken = await this.tokenService.generateRefreshToken(payload);
       writeToCookie(res, 'refreshTokenUser', refreshToken);
-      return {
+  
+      return res.status(200).json({
         statusCode: 200,
         message: 'success',
-        data: accessToken
-      };
+        data: accessToken,
+      });
     } catch (error) {
       return catchError(error);
     }
   }
+  
+  
 
   async logOut(res: Response) {
     try {
@@ -153,7 +161,7 @@ export class UsersService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     try {
       const user = await this.model.findByPk(id, {
         attributes: { exclude: ['hashed_password'] },
@@ -171,7 +179,7 @@ export class UsersService {
     }
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto) {
     try {
       const user = await this.model.findByPk(id);
       if (!user) {
@@ -202,7 +210,7 @@ export class UsersService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     try {
       const user = await this.model.findByPk(id);
       if (!user) {

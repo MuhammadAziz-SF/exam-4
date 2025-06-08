@@ -4,9 +4,8 @@ import config from './config';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductModule } from './product/product.module';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './strategies/jwt.strategy';
 import { DeliversModule } from './delivers/delivers.module';
 import { Delivers } from './delivers/model/delivery.model';
 import { OrderItem } from './order-items/entities/order-item.entity';
@@ -25,7 +24,11 @@ import { CartModule } from './cart/cart.module';
 import { CartItemsModule } from './cart-items/cart-items.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { TransactionModule } from './transaction/transaction.module';
-
+import { Review } from './reviews/entities/review.entity';
+import { Cart } from './cart/entities/cart.entity';
+import { CartItem } from './cart-items/entities/cart-item.entity';
+import { Transaction } from './transaction/entities/transaction.entity';
+import { MailModule } from './mail/email.module';
 
 @Module({
   imports: [
@@ -39,12 +42,30 @@ import { TransactionModule } from './transaction/transaction.module';
       synchronize: true,
       logging: false,
       autoLoadModels: true,
-      models: [User, Category, Product, Delivers, OrderItem, Store, OrderDelivery, Admin],
+      sync: {
+        force: false,
+        alter: true,
+      },
+      models: [
+        User,
+        Category,
+        Product,
+        Delivers,
+        OrderItem,
+        Store,
+        OrderDelivery,
+        Admin,
+        Review,
+        Cart,
+        CartItem,
+        Transaction
+      ],
     }),
     CacheModule.register({ isGlobal: true }),
     JwtModule.register({
       secret: config.JWT_ACCESS_K,
       signOptions: { expiresIn: config.JWT_ACCESS_T },
+      global: true,
     }),
     PassportModule,
     AdminModule,
@@ -59,7 +80,8 @@ import { TransactionModule } from './transaction/transaction.module';
     CartItemsModule,
     ReviewsModule,
     TransactionModule,
+    MailModule
   ],
-  providers: [JwtStrategy],
+  providers: [JwtService],
 })
 export class AppModule {}

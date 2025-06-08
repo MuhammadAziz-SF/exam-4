@@ -5,9 +5,11 @@ import {
   ForeignKey,
   Model,
   Table,
+  PrimaryKey
 } from 'sequelize-typescript';
 import { StoreStatus } from 'src/enum';
 import { User } from '../../users/entities/user.entity';
+import { v4 as uuidv4 } from 'uuid';
 
 @Table({ 
   tableName: 'store',
@@ -15,12 +17,19 @@ import { User } from '../../users/entities/user.entity';
   paranoid: true
 })
 export class Store extends Model {
+  @PrimaryKey
+  @Column({
+    type: DataType.UUID,
+    defaultValue: () => uuidv4(),
+  })
+  declare id: string;
+
   @ForeignKey(() => User)
   @Column({ 
-    type: DataType.INTEGER,
+    type: DataType.UUID,
     allowNull: false
   })
-  seller_id: number;
+  seller_id: string;
 
   @BelongsTo(() => User)
   seller: User;

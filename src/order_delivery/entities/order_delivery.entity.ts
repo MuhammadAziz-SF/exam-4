@@ -1,7 +1,16 @@
-import { Column,Model,Table,DataType } from "sequelize-typescript";
+import { Column, Model, Table, DataType, PrimaryKey } from "sequelize-typescript";
 import { DeliveryStatus, Status } from "src/enum";
+import { v4 as uuidv4 } from 'uuid';
+
 @Table({tableName:'order_delivery'})
 export class OrderDelivery extends Model{
+    @PrimaryKey
+    @Column({
+        type: DataType.UUID,
+        defaultValue: () => uuidv4(),
+    })
+    declare id: string;
+    
     @Column({
         type:DataType.STRING,
         allowNull:false

@@ -21,71 +21,50 @@ import { Roles } from 'src/enum';
 import { Roles as RolesDecorator } from 'src/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { AdminGuard } from 'src/guards/admin.guard';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiOperation({ summary: 'Create new user' })
-  @ApiResponse({ status: 201, description: 'User created successfully' })
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @RolesDecorator(Roles.ADMIN, Roles.SUPER_ADMIN)
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
-  @Post('login')
-  login(@Body() loginDto: LogInDto) {
-    return this.usersService.SignInUser(loginDto);
+  @Post('signin')
+  login(@Body() logInDto: LogInDto) {
+    return this.usersService.SignInUser(logInDto);
   }
 
-  @Post('confirm-login')
-  confirmLogin(@Body() confirmLoginDto: ConfirmLoginDto, @Res() res: Response) {
+  @Post('confirm')
+  confirmLogin(
+    @Body() confirmLoginDto: ConfirmLoginDto,
+    @Res() res: Response,
+  ) {
     return this.usersService.confirmLogin(confirmLoginDto, res);
   }
 
-  @Post('logout')
   @UseGuards(JwtAuthGuard)
-  logout(@Res() res: Response) {
-    return this.usersService.logOut(res);
-  }
-
-  @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Return all users' })
   @Get()
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @RolesDecorator(Roles.ADMIN, Roles.SUPER_ADMIN)
   findAll() {
     return this.usersService.findAll();
   }
 
-  @ApiOperation({ summary: 'Get user by ID' })
-  @ApiResponse({ status: 200, description: 'Return user by ID' })
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @RolesDecorator(Roles.ADMIN, Roles.SUPER_ADMIN)
   findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+    return this.usersService.findOne(id);
   }
 
-  @ApiOperation({ summary: 'Update user' })
-  @ApiResponse({ status: 200, description: 'User updated successfully' })
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @RolesDecorator(Roles.ADMIN, Roles.SUPER_ADMIN)
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+    return this.usersService.update(id, updateUserDto);
   }
 
-  @ApiOperation({ summary: 'Delete user' })
-  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  @RolesDecorator(Roles.ADMIN, Roles.SUPER_ADMIN)
   remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+    return this.usersService.remove(id);
   }
 }

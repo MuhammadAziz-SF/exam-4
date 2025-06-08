@@ -5,7 +5,6 @@ import { PassportModule } from '@nestjs/passport';
 import config from '../config';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Admin } from './models/admin.model';
-import { JwtStrategy } from '../strategies/jwt.strategy';
 import { RolesGuard } from '../guards/roles.guard';
 import { AdminService } from './admin.service';
 import { join } from 'path';
@@ -27,7 +26,6 @@ import { MailService } from 'src/mail/email.service';
     
   ],
   controllers: [AdminController],
-  providers: [AdminService, JwtStrategy, RolesGuard, TokenService, MailService],
-  exports: [JwtStrategy, PassportModule, RolesGuard, TokenService]
+  providers: [AdminService,  RolesGuard, TokenService, MailService]
 })
 export class AdminModule {}

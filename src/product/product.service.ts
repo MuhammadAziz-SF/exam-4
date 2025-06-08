@@ -58,7 +58,7 @@ export class ProductService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     try {
       const product = await this.model.findByPk(id);
       if (!product) {
@@ -74,7 +74,7 @@ export class ProductService {
     }
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto) {
+  async update(id: string, updateProductDto: UpdateProductDto) {
     try {
       const product = await this.model.findByPk(id);
       if (!product) {
@@ -100,7 +100,7 @@ export class ProductService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     try {
       const product = await this.model.findByPk(id);
       if (!product) {

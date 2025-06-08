@@ -37,7 +37,7 @@ export class CategoriesService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     try {
       const categories = await this.model.findByPk(id);
       if (!categories) {
@@ -53,7 +53,7 @@ export class CategoriesService {
     }
   }
 
-  async update(id: number, updateCategoryDto: UpdateCategoryDto) {
+  async update(id: string, updateCategoryDto: UpdateCategoryDto) {
     try {
       const [affectedCount, affectedRows] = await this.model.update(updateCategoryDto, { where: { id }, returning: true });
       if (affectedCount === 0) {
@@ -69,7 +69,7 @@ export class CategoriesService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     try {
       await this.model.destroy({ where: { id } });
       return { data: {} };
