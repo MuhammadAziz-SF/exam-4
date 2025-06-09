@@ -1,9 +1,22 @@
 import { PartialType, OmitType } from '@nestjs/mapped-types';
-import { CreateStoreDto, StoreStatus } from './create-store.dto';
-import { IsOptional, IsString, IsEnum, IsNumber, IsBoolean, IsUrl, Length, Max, Min, Matches, IsPhoneNumber } from 'class-validator';
+import { CreateStoreDto } from './create-store.dto';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsBoolean,
+  IsUrl,
+  Length,
+  Max,
+  Min,
+  Matches,
+  IsPhoneNumber,
+} from 'class-validator';
+import { StoreStatus } from 'src/enum';
 
 export class UpdateStoreDto extends PartialType(
-  OmitType(CreateStoreDto, ['seller_id'] as const)
+  OmitType(CreateStoreDto, ['seller_id'] as const),
 ) {
   @IsOptional()
   @IsString()

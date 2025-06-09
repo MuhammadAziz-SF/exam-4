@@ -9,4 +9,4 @@ export class SuperAdminGuard implements CanActivate {
 
     return user && user.role === Roles.SUPER_ADMIN;
   }
-} 
+}

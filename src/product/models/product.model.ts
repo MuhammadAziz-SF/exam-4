@@ -1,10 +1,17 @@
-import { Column, DataType, Model, Table, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import {
+  Column,
+  DataType,
+  Model,
+  Table,
+  ForeignKey,
+  BelongsTo,
+} from 'sequelize-typescript';
 import { ProductStatus } from 'src/enum';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
 
-@Table({ tableName: 'products', timestamps: true})
+@Table({ tableName: 'products', timestamps: true })
 export class Product extends Model {
   @Column({
     type: DataType.UUID,
@@ -20,7 +27,7 @@ export class Product extends Model {
   declare name: string;
 
   @Column({
-    type: DataType.DECIMAL,
+    type: DataType.DECIMAL(10, 2),
     allowNull: false,
   })
   declare price: number;
@@ -41,7 +48,18 @@ export class Product extends Model {
     type: DataType.BIGINT,
     allowNull: false,
   })
-  declare quantity: bigint;
+  declare quantity: number;
+
+  @Column({
+    type: DataType.FLOAT,
+    allowNull: true,
+    defaultValue: 0,
+    validate: {
+      min: 0,
+      max: 5,
+    },
+  })
+  declare rating: number;
 
   @Column({
     type: DataType.ENUM(ProductStatus.EXISTS, ProductStatus.NOT_EXISTS),

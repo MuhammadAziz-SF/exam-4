@@ -11,15 +11,10 @@ import {
   IsInt,
   Matches,
   IsPhoneNumber,
+  IsOptional,
+  IsUUID,
 } from 'class-validator';
-
-export enum StoreStatus {
-  OPEN = 'OPEN',
-  CLOSED = 'CLOSED',
-  MAINTENANCE = 'MAINTENANCE',
-  PAUSED = 'PAUSED',
-  INACTIVE = 'INACTIVE'
-}
+import { StoreStatus } from 'src/enum';
 
 export class CreateStoreDto {
   @IsString()
@@ -48,23 +43,22 @@ export class CreateStoreDto {
   @Length(5, 200)
   location: string;
 
+  @IsOptional()
   @IsEnum(StoreStatus)
-  store_status: StoreStatus;
+  store_status?: StoreStatus;
 
   @IsNumber()
   @Min(0)
   @Max(5)
-  rating: number;
-
-  @IsBoolean()
-  is_open: boolean;
+  @IsOptional()
+  rating?: number;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @IsUrl()
-  logo_url: string;
+  logo_url?: string;
 
-  @IsInt()
+  @IsUUID()
   @IsNotEmpty()
-  seller_id: number;
+  seller_id: string;
 }

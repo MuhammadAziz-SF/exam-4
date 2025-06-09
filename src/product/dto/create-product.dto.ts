@@ -7,7 +7,7 @@ import {
   IsUUID,
 } from 'class-validator';
 
-import { Status } from 'src/enum';
+import { ProductStatus } from 'src/enum';
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -32,15 +32,15 @@ export class CreateProductDto {
   @IsPositive()
   quantity: bigint;
 
-  @IsEnum(Status)
+  @IsEnum(ProductStatus)
   @IsNotEmpty()
-  status: Status;
+  status: ProductStatus;
 
   @IsUUID()
   @IsNotEmpty()
   seller_id: string;
 
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
-  category_type: string;
+  category_id: string;
 }

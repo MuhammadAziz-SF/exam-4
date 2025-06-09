@@ -1,4 +1,12 @@
-import { Column, Model, Table, DataType, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
+import {
+  Column,
+  Model,
+  Table,
+  DataType,
+  ForeignKey,
+  BelongsTo,
+  HasMany,
+} from 'sequelize-typescript';
 import { v4 as uuidv4 } from 'uuid';
 import { Product } from '../../product/models/product.model';
 

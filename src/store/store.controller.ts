@@ -39,7 +39,7 @@ export class StoreController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: number) {
     return this.storeService.findOne(id);
   }
 

@@ -1,4 +1,12 @@
-import { Column, DataType, Model, Table, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import {
+  Column,
+  DataType,
+  Model,
+  Table,
+  ForeignKey,
+  BelongsTo,
+  HasMany,
+} from 'sequelize-typescript';
 import { User } from '../../users/entities/user.entity';
 import { Product } from '../../product/models/product.model';
 import { v4 as uuidv4 } from 'uuid';
@@ -27,18 +35,31 @@ export class Review extends Model {
   product_id: string;
 
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  parent_id: string;
+
+  @Column({
+    type: DataType.BOOLEAN,
     allowNull: false,
+    defaultValue: false,
+  })
+  is_reply: boolean;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
     validate: {
       min: 1,
-      max: 5
-    }
+      max: 5,
+    },
   })
   rating: number;
 
   @Column({
     type: DataType.TEXT,
-    allowNull: true,
+    allowNull: false,
   })
   comment: string;
 
@@ -53,4 +74,10 @@ export class Review extends Model {
 
   @BelongsTo(() => Product)
   product: Product;
+
+  @HasMany(() => Review, {
+    foreignKey: 'parent_id',
+    as: 'replies',
+  })
+  replies: Review[];
 }

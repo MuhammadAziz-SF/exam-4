@@ -18,14 +18,13 @@ import { MailService } from 'src/mail/email.service';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: config.JWT_ACCESS_K,
-      signOptions: { expiresIn: config.JWT_ACCESS_T }
+      signOptions: { expiresIn: config.JWT_ACCESS_T },
     }),
     SequelizeModule.forFeature([Admin]),
     CacheModule.register(),
     MailModule,
-    
   ],
   controllers: [AdminController],
-  providers: [AdminService,  RolesGuard, TokenService, MailService]
+  providers: [AdminService, RolesGuard, TokenService, MailService],
 })
 export class AdminModule {}

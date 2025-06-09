@@ -18,13 +18,13 @@ import { MailModule } from 'src/mail/email.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: config.JWT_ACCESS_K,
-      signOptions: { expiresIn: config.JWT_ACCESS_T }
+      signOptions: { expiresIn: config.JWT_ACCESS_T },
     }),
     CacheModule.register(),
-    MailModule
+    MailModule,
   ],
   controllers: [UsersController],
   providers: [UsersService, TokenService, MailService],
-  exports: [TokenService, MailService]
+  exports: [TokenService, MailService],
 })
 export class UsersModule {}

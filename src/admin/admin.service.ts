@@ -26,6 +26,7 @@ import { MailService } from 'src/mail/email.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ConfirmSignInAdminDto } from './dto/confirm-signin.dto';
+import { successRes } from 'src/utils/success-response';
 
 @Injectable()
 export class AdminService {
@@ -62,23 +63,25 @@ export class AdminService {
   async superAdminLogin(loginDto: LoginDto, res: Response) {
     try {
       const { email, password } = loginDto;
-  
+
       const admin = await this.adminModel.findOne({ where: { email } });
-  
+
       if (!admin) {
         throw new BadRequestException('Invalid credentials');
       }
-  
+
       if (admin.status === Status.INACTIVE) {
         throw new UnauthorizedException('Account is inactive');
       }
 
       if (admin.role !== Roles.SUPER_ADMIN) {
-        throw new UnauthorizedException('Access denied. Super admin access required.');
+        throw new UnauthorizedException(
+          'Access denied. Super admin access required.',
+        );
       }
-  
+
       const isPasswordValid = await decrypt(password, admin.hashed_password);
-  
+
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials');
       }
@@ -86,23 +89,20 @@ export class AdminService {
       const { id, role, status } = admin.dataValues;
       const payload = { id, role, status };
       const accessToken = await this.tokenService.generateAccessToken(payload);
-      const refreshToken = await this.tokenService.generateRefreshToken(payload);
+      const refreshToken =
+        await this.tokenService.generateRefreshToken(payload);
       writeToCookie(res, 'refreshTokenAdmin', refreshToken);
 
-      return res.status(200).json({
-        statusCode: 200,
-        message: 'Super admin login successful',
-        data: {
-          accessToken
-        },
-      });
-
+      return res.status(200).json(successRes({ accessToken }, 200));
     } catch (error) {
       return catchError(error);
     }
   }
 
-  async createAdmin(createAdminDto: CreateAdminDto, res: Response): Promise<object> {
+  async createAdmin(
+    createAdminDto: CreateAdminDto,
+    res: Response,
+  ): Promise<object> {
     try {
       const { email, phone_number, password } = createAdminDto;
 
@@ -128,11 +128,7 @@ export class AdminService {
       });
 
       const { hashed_password, ...result } = admin.toJSON();
-      return res.status(201).json({
-        statusCode: 201,
-        message: 'Admin created successfully',
-        data: result,
-      });
+      return res.status(201).json(successRes(result, 201));
     } catch (error) {
       return catchError(error);
     }
@@ -141,19 +137,19 @@ export class AdminService {
   async login(loginDto: LoginDto, res: Response) {
     try {
       const { email, password } = loginDto;
-  
+
       const admin = await this.adminModel.findOne({ where: { email } });
-  
+
       if (!admin) {
         throw new BadRequestException('Invalid credentials');
       }
-  
+
       if (admin.status === Status.INACTIVE) {
         throw new UnauthorizedException('Account is inactive');
       }
-  
+
       const isPasswordValid = await decrypt(password, admin.hashed_password);
-  
+
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials');
       }
@@ -161,18 +157,16 @@ export class AdminService {
       const otp = generateOTP();
       await this.mailService.sendOtp(admin.email, String(otp));
       await this.cacheManager.set(email, otp, 300000);
-      return res.status(200).json({
-        statusCode: 200,
-        message: 'OTP sent successfully',
-        data: email,
-      });
-
+      return res.status(200).json(successRes(email, 200));
     } catch (error) {
       return catchError(error);
     }
   }
-  
-  async confirmLogin(confirmSignInAdminDto: ConfirmSignInAdminDto, res: Response): Promise<object> {
+
+  async confirmLogin(
+    confirmSignInAdminDto: ConfirmSignInAdminDto,
+    res: Response,
+  ): Promise<object> {
     try {
       const { email, otp } = confirmSignInAdminDto;
       const hasUser = await this.cacheManager.get(email);
@@ -183,16 +177,10 @@ export class AdminService {
       const { id, role, status } = admin?.dataValues;
       const payload = { id, role, status };
       const accessToken = await this.tokenService.generateAccessToken(payload);
-      const refreshToken = await this.tokenService.generateRefreshToken(payload);
+      const refreshToken =
+        await this.tokenService.generateRefreshToken(payload);
       writeToCookie(res, 'refreshTokenAdmin', refreshToken);
-      return res.status(200).json({
-        statusCode: 200,
-        message: 'Login confirmed successfully',
-        data: {
-          accessToken
-        },
-      });
-      
+      return res.status(200).json(successRes({ accessToken }, 200));
     } catch (error) {
       return catchError(error);
     }
@@ -201,10 +189,7 @@ export class AdminService {
   async logout(res: Response) {
     try {
       clearCookie(res, 'refreshTokenAdmin');
-      return res.status(200).json({
-        statusCode: 200,
-        message: 'Logout successful',
-      });
+      return res.status(200).json(successRes(null, 200));
     } catch (error) {
       return catchError(error);
     }
@@ -215,11 +200,7 @@ export class AdminService {
       const admins = await this.adminModel.findAll({
         attributes: { exclude: ['hashed_password'] },
       });
-      return res.status(200).json({
-        statusCode: 200,
-        message: 'Success',
-        data: admins,
-      });
+      return res.status(200).json(successRes(admins, 200));
     } catch (error) {
       return catchError(error);
     }
@@ -233,11 +214,7 @@ export class AdminService {
       if (!admin) {
         throw new NotFoundException('Admin not found');
       }
-      return res.status(200).json({
-        statusCode: 200,
-        message: 'Success',
-        data: admin,
-      });
+      return res.status(200).json(successRes(admin, 200));
     } catch (error) {
       return catchError(error);
     }
@@ -258,7 +235,9 @@ export class AdminService {
               {
                 [Op.or]: [
                   updateAdminDto.email ? { email: updateAdminDto.email } : {},
-                  updateAdminDto.phone_number ? { phone_number: updateAdminDto.phone_number } : {},
+                  updateAdminDto.phone_number
+                    ? { phone_number: updateAdminDto.phone_number }
+                    : {},
                 ],
               },
               { id: { [Op.ne]: id } },
@@ -291,11 +270,7 @@ export class AdminService {
         attributes: { exclude: ['hashed_password'] },
       });
 
-      return res.status(200).json({
-        statusCode: 200,
-        message: 'Admin updated successfully',
-        data: updatedAdmin,
-      });
+      return res.status(200).json(successRes(updatedAdmin, 200));
     } catch (error) {
       return catchError(error);
     }
@@ -309,10 +284,7 @@ export class AdminService {
       }
 
       await admin.destroy();
-      return res.status(200).json({
-        statusCode: 200,
-        message: 'Admin deleted successfully',
-      });
+      return res.status(200).json(successRes(null, 200));
     } catch (error) {
       return catchError(error);
     }

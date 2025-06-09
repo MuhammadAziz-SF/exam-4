@@ -22,13 +22,21 @@ import { SuperAdminGuard } from 'src/guards/super-admin.guard';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Post('super-admin-login')
+  superAdminLogin(@Body() loginDto: LoginDto, @Res() res: Response) {
+    return this.adminService.superAdminLogin(loginDto, res);
+  }
+
   @Post('login')
   login(@Body() loginDto: LoginDto, @Res() res: Response) {
     return this.adminService.login(loginDto, res);
   }
 
   @Post('confirm-login')
-  confirmLogin(@Body() confirmSignInAdminDto: ConfirmSignInAdminDto, @Res() res: Response) {
+  confirmLogin(
+    @Body() confirmSignInAdminDto: ConfirmSignInAdminDto,
+    @Res() res: Response,
+  ) {
     return this.adminService.confirmLogin(confirmSignInAdminDto, res);
   }
 
@@ -58,7 +66,11 @@ export class AdminController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
-  update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto, @Res() res: Response) {
+  update(
+    @Param('id') id: string,
+    @Body() updateAdminDto: UpdateAdminDto,
+    @Res() res: Response,
+  ) {
     return this.adminService.update(id, updateAdminDto, res);
   }
 

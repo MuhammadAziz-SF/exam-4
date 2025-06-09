@@ -21,7 +21,7 @@ export class User extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    unique: true
+    unique: true,
   })
   declare phone_number: string;
 
@@ -40,7 +40,7 @@ export class User extends Model {
 
   @Column({
     type: DataType.DATE,
-    allowNull: false
+    allowNull: false,
   })
   declare date_of_birth: string;
 
@@ -51,7 +51,13 @@ export class User extends Model {
   declare address: string;
 
   @Column({
-    type: DataType.ENUM(Roles.BUYER, Roles.DELIVERY_AGENT, Roles.MANAGER, Roles.SELLER, Roles.SUPPORT),
+    type: DataType.ENUM(
+      Roles.BUYER,
+      Roles.DELIVERY_AGENT,
+      Roles.MANAGER,
+      Roles.SELLER,
+      Roles.SUPPORT,
+    ),
     allowNull: true,
     defaultValue: Roles.BUYER,
   })

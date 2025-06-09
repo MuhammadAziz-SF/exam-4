@@ -1,4 +1,10 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsPhoneNumber, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsPhoneNumber,
+  IsString,
+} from 'class-validator';
 import { Roles } from 'src/enum';
 
 export class CreateAdminDto {

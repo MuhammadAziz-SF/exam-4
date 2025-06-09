@@ -5,16 +5,16 @@ import {
   ForeignKey,
   Model,
   Table,
-  PrimaryKey
+  PrimaryKey,
 } from 'sequelize-typescript';
 import { StoreStatus } from 'src/enum';
 import { User } from '../../users/entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 
-@Table({ 
+@Table({
   tableName: 'store',
   timestamps: true,
-  paranoid: true
+  paranoid: true,
 })
 export class Store extends Model {
   @PrimaryKey
@@ -25,9 +25,9 @@ export class Store extends Model {
   declare id: string;
 
   @ForeignKey(() => User)
-  @Column({ 
+  @Column({
     type: DataType.UUID,
-    allowNull: false
+    allowNull: false,
   })
   seller_id: string;
 
@@ -36,7 +36,7 @@ export class Store extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false
+    allowNull: false,
   })
   store_type: string;
 
@@ -48,7 +48,7 @@ export class Store extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false
+    allowNull: false,
   })
   contacts: string;
 
@@ -66,25 +66,26 @@ export class Store extends Model {
 
   @Column({
     type: DataType.ENUM('OPEN', 'CLOSED', 'MAINTENANCE', 'PAUSED', 'INACTIVE'),
-    defaultValue: 'INACTIVE'
+    allowNull: true,
+    defaultValue: 'INACTIVE',
   })
   store_status: StoreStatus;
 
   @Column({
     type: DataType.FLOAT,
-    allowNull: false,
+    allowNull: true,
     defaultValue: 0.0,
     validate: {
       min: 0,
-      max: 5
-    }
+      max: 5,
+    },
   })
   rating: number;
 
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
-    defaultValue: false
+    defaultValue: false,
   })
   is_open: boolean;
 

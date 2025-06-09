@@ -4,13 +4,19 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './models/product.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { catchError } from 'src/utils/catch-error';
+import { Category } from 'src/categories/entities/category.entity';
+import { decodeJwt } from 'src/services/getIdByJwt';
+import { Request } from 'express';
+import { Admin } from 'src/admin/models/admin.model';
+import { successRes } from 'src/utils/success-response';
 
 @Injectable()
 export class ProductService {
   constructor(@InjectModel(Product) private model: typeof Product) {}
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, req: Request) {
     try {
+      const decoded = await decodeJwt(req);
       const {
         name,
         price,
@@ -19,12 +25,23 @@ export class ProductService {
         pictures,
         seller_id,
         status,
-        category_type,
+        category_id,
       } = createProductDto;
       const existsName = await this.model.findOne({ where: { name } });
       if (existsName) {
         throw new ConflictException('Product name already exists');
       }
+      const category = await Category.findByPk(category_id);
+      if (!category) {
+        throw new ConflictException('Category not found');
+      }
+
+      const user = await Admin.findByPk(decoded.id);
+      if (!user) {
+        console.log(user);
+        throw new ConflictException('User not found');
+      }
+
       const newProduct = await this.model.create({
         name,
         price,
@@ -33,13 +50,9 @@ export class ProductService {
         pictures,
         status,
         seller_id,
-        category_type,
+        category_id,
       });
-      return {
-        statusCode: 201,
-        message: 'Product created successfully',
-        data: newProduct,
-      };
+      return successRes(newProduct, 201);
     } catch (error) {
       return catchError(error);
     }
@@ -48,11 +61,7 @@ export class ProductService {
   async findAll() {
     try {
       const products = await this.model.findAll();
-      return {
-        statusCode: 200,
-        message: 'success',
-        data: products,
-      };
+      return successRes(products, 200);
     } catch (error) {
       return catchError(error);
     }
@@ -64,11 +73,7 @@ export class ProductService {
       if (!product) {
         throw new ConflictException('Product not found');
       }
-      return {
-        statusCode: 200,
-        message: 'success',
-        data: product,
-      };
+      return successRes(product, 200);
     } catch (error) {
       return catchError(error);
     }
@@ -85,16 +90,12 @@ export class ProductService {
       if (name && name !== product.name) {
         const existsName = await this.model.findOne({ where: { name } });
         if (existsName) {
-          throw new ConflictException('Bu nomdagi mahsulot allaqachon mavjud!');
+          throw new ConflictException('Product not exists!');
         }
       }
 
       await product.update(updateProductDto);
-      return {
-        statusCode: 200,
-        message: 'success',
-        data: product,
-      };
+      return successRes(product, 200);
     } catch (error) {
       return catchError(error);
     }
@@ -107,10 +108,7 @@ export class ProductService {
         throw new ConflictException('Product not found');
       }
       await product.destroy();
-      return {
-        statusCode: 200,
-        message: 'success',
-      };
+      return successRes(null, 200);
     } catch (error) {
       return catchError(error);
     }
