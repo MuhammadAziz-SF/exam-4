@@ -26,13 +26,12 @@ export class ReviewsService {
 
   async create(createReviewDto: CreateReviewDto) {
     try {
-      // Validate if user exists
       const user = await this.userModel.findByPk(createReviewDto.user_id);
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
-      // Validate if product exists
+      
       const product = await this.productModel.findByPk(
         createReviewDto.product_id,
       );
@@ -40,7 +39,7 @@ export class ReviewsService {
         throw new NotFoundException('Product not found');
       }
 
-      // Check if user role is buyer or admin/super_admin
+      
       if (
         user.role !== Roles.BUYER &&
         user.role !== Roles.ADMIN &&
@@ -51,13 +50,13 @@ export class ReviewsService {
         );
       }
 
-      // Create the review
+      
       const review = await this.reviewModel.create({
         ...createReviewDto,
         is_reply: false,
       });
 
-      // Calculate average rating for product and update it
+     
       await this.updateProductRating(createReviewDto.product_id);
 
       return successRes(review, 201);
@@ -235,7 +234,6 @@ export class ReviewsService {
         throw new NotFoundException(`Review not found with id ${id}`);
       }
 
-      // Only the author of the review or an admin can update it
       const user = await this.userModel.findByPk(user_id);
       if (
         review.user_id !== user_id &&
@@ -247,14 +245,12 @@ export class ReviewsService {
         );
       }
 
-      // If it's a reply, don't allow changing the rating
       if (review.is_reply && updateReviewDto.rating) {
         throw new BadRequestException('Cannot set rating for a reply');
       }
 
       await review.update(updateReviewDto);
 
-      // If the rating was updated, update the product's average rating
       if (updateReviewDto.rating && !review.is_reply) {
         await this.updateProductRating(review.product_id);
       }
@@ -279,7 +275,7 @@ export class ReviewsService {
         throw new NotFoundException(`Review not found with id ${id}`);
       }
 
-      // Only the author of the review or an admin can delete it
+     
       const user = await this.userModel.findByPk(user_id);
       if (
         review.user_id !== user_id &&
@@ -291,7 +287,7 @@ export class ReviewsService {
         );
       }
 
-      // If it's a parent review, delete all replies first
+      
       if (!review.is_reply) {
         await this.reviewModel.destroy({
           where: { parent_id: id },
@@ -300,7 +296,7 @@ export class ReviewsService {
 
       await review.destroy();
 
-      // If it's a review with rating, update the product's average rating
+      
       if (!review.is_reply) {
         await this.updateProductRating(review.product_id);
       }
@@ -319,7 +315,7 @@ export class ReviewsService {
 
   private async updateProductRating(product_id: string) {
     try {
-      // Calculate the average rating
+      
       const result = await this.reviewModel.findAll({
         where: { product_id, is_reply: false },
         attributes: [
@@ -332,8 +328,6 @@ export class ReviewsService {
 
       const avgRating = result[0].getDataValue('averageRating') || 0;
 
-      // Update the product with the new average rating
-      // This assumes the Product model has a rating field
       await this.productModel.update(
         { rating: avgRating },
         { where: { id: product_id } },

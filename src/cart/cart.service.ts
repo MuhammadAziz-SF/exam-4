@@ -8,51 +8,81 @@ import { Cart } from './entities/cart.entity';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 import { successRes } from 'src/utils/success-response';
+import { decodeJwt } from 'src/services/getIdByJwt';
+import { Request } from 'express';
+import { Product } from 'src/product/models/product.model';
 
 @Injectable()
 export class CartService {
   constructor(@InjectModel(Cart) private cartModel: typeof Cart) {}
 
-  async addToCart(createCartDto: CreateCartDto) {
-    try {
-      let cart = await this.cartModel.findOne({
-        where: { buyer_id: createCartDto.buyer_id },
-      });
+  async addToCart(createCartDto: CreateCartDto, req: Request) {
+  try {
+    const decoded = await decodeJwt(req);
+    const buyer_id = decoded.id;
 
-      if (cart) {
-        const updatedProducts = [...cart.products, ...createCartDto.products];
-        const totalAmount = updatedProducts.reduce(
-          (sum, product) => sum + product.price * product.quantity,
-          0,
-        );
-        
+    let cart = await this.cartModel.findOne({ where: { buyer_id } });
 
-        await cart.update({
-          products: updatedProducts,
-          total_amount: totalAmount,
-          item_count: updatedProducts.length,
-        });
-
-        return successRes(cart, 200);
+    if(!cart) {
+      let foundProducts: any =  [];
+      for (const id of createCartDto.products) {
+        const product = await Product.findByPk(id)
+        foundProducts.push({
+          id: buyer_id,
+          name: product?.name,
+          price: product?.price,
+          quantity: product?.quantity
+        })
       }
-
-      const totalAmount = createCartDto.products.reduce(
-        (sum, product) => sum + product.price * product.quantity,
-        0,
-      );
-
-      cart = await this.cartModel.create({
-        buyer_id: createCartDto.buyer_id,
-        products: createCartDto.products,
-        total_amount: totalAmount,
-        item_count: createCartDto.products.length,
-      });
-
-      return successRes(cart, 201);
-    } catch (error) {
-      throw new BadRequestException('Failed to add to  cart: ' + error.message);
     }
+    
+      
+    //   foundProducts.push({
+    //     id: product.id,
+    //     name: product.name,
+    //     price: product.price,
+    //     quantity: 1
+    //   });
+    // }
+
+    // // Step 3: Calculate total amount
+    // const totalAmount = foundProducts.reduce(
+    //   (sum, product) => sum + product.price * product.quantity,
+    //   0
+    // );
+
+    // // Step 4: Create or update cart
+    // if (cart) {
+    //   // Merge new products with existing ones (simple concat for now)
+    //   const updatedProducts = [...cart.products, ...foundProducts];
+    //   const updatedTotal = updatedProducts.reduce(
+    //     (sum, product) => sum + product.price * product.quantity,
+    //     0
+    //   );
+
+    //   await cart.update({
+    //     products: updatedProducts,
+    //     total_amount: updatedTotal,
+    //     item_count: updatedProducts.length,
+    //   });
+
+    //   return successRes(cart, 200);
+    // }
+
+    // // If no cart exists — create new one
+    // cart = await this.cartModel.create({
+    //   buyer_id,
+    //   products: foundProducts,
+    //   total_amount: totalAmount,
+    //   item_count: foundProducts.length,
+    // });
+
+    return successRes(cart, 201);
+  } catch (error) {
+    throw new BadRequestException('Failed to add to cart: ' + error.message);
   }
+}
+
 
   async findAll() {
     try {

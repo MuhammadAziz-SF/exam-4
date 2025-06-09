@@ -35,12 +35,6 @@ export class Review extends Model {
   product_id: string;
 
   @Column({
-    type: DataType.UUID,
-    allowNull: true,
-  })
-  parent_id: string;
-
-  @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: false,
@@ -62,12 +56,6 @@ export class Review extends Model {
     allowNull: false,
   })
   comment: string;
-
-  @Column({
-    type: DataType.BOOLEAN,
-    defaultValue: true,
-  })
-  is_verified: boolean;
 
   @BelongsTo(() => User)
   user: User;
