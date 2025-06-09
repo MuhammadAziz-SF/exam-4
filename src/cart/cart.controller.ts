@@ -9,15 +9,17 @@ import {
   HttpStatus,
   HttpCode,
   UseGuards,
+  Req
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { CreateCartDto } from './dto/create-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
+// import { UpdateCartDto } from './dto/update-cart.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { Roles } from '../decorators/roles.decorator';
 import { Roles as UserRoles } from '../enum';
 import { SelfGuard } from 'src/guards/self.guard';
+import { Request } from 'express';
 
 @Controller('cart')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -27,8 +29,8 @@ export class CartController {
   @Post('add')
   @Roles(UserRoles.BUYER)
   @HttpCode(HttpStatus.CREATED)
-  addToCart(@Body() createCartDto: CreateCartDto) {
-    return this.cartService.addToCart(createCartDto);
+  addToCart(@Body() createCartDto: CreateCartDto, @Req() req: Request) {
+    return this.cartService.addToCart(createCartDto, req);
   }
 
   @Get()
@@ -54,13 +56,13 @@ export class CartController {
     return this.cartService.findOne(id);
   }
 
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard, SelfGuard)
-  @Roles(UserRoles.BUYER)
-  @HttpCode(HttpStatus.OK)
-  update(@Param('id') id: string, @Body() updateCartDto: UpdateCartDto) {
-    return this.cartService.update(id, updateCartDto);
-  }
+  // @Patch(':id')
+  // @UseGuards(JwtAuthGuard, RolesGuard, SelfGuard)
+  // @Roles(UserRoles.BUYER)
+  // @HttpCode(HttpStatus.OK)
+  // update(@Param('id') id: string, @Body() updateCartDto: UpdateCartDto) {
+  //   return this.cartService.update(id, updateCartDto);
+  // }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)

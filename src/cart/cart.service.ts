@@ -6,7 +6,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 import { Cart } from './entities/cart.entity';
 import { CreateCartDto } from './dto/create-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
+// import { UpdateCartDto } from './dto/update-cart.dto';
 import { successRes } from 'src/utils/success-response';
 import { decodeJwt } from 'src/services/getIdByJwt';
 import { Request } from 'express';
@@ -137,32 +137,32 @@ export class CartService {
     }
   }
 
-  async update(id: string, updateCartDto: UpdateCartDto) {
-    try {
-      const cart = await this.cartModel.findByPk(id);
-      if (!cart) {
-        throw new NotFoundException(`Cart not found with id ${id}`);
-      }
+  // async update(id: string, updateCartDto: UpdateCartDto) {
+  //   try {
+  //     const cart = await this.cartModel.findByPk(id);
+  //     if (!cart) {
+  //       throw new NotFoundException(`Cart not found with id ${id}`);
+  //     }
 
-      if (updateCartDto.products) {
-        const totalAmount = updateCartDto.products.reduce(
-          (sum, product) => sum + product.price * product.quantity,
-          0,
-        );
+  //     if (updateCartDto.products) {
+  //       const totalAmount = updateCartDto.products.reduce(
+  //         (sum, product) => sum + product.price * product.quantity,
+  //         0,
+  //       );
 
-        updateCartDto['total_amount'] = totalAmount;
-        updateCartDto['item_count'] = updateCartDto.products.length;
-      }
+  //       updateCartDto['total_amount'] = totalAmount;
+  //       updateCartDto['item_count'] = updateCartDto.products.length;
+  //     }
 
-      await cart.update(updateCartDto);
-      return successRes(cart, 200);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new BadRequestException('Failed to update cart');
-    }
-  }
+  //     await cart.update(updateCartDto);
+  //     return successRes(cart, 200);
+  //   } catch (error) {
+  //     if (error instanceof NotFoundException) {
+  //       throw error;
+  //     }
+  //     throw new BadRequestException('Failed to update cart');
+  //   }
+  // }
 
   async remove(id: string) {
     try {
