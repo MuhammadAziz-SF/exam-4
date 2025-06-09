@@ -5,11 +5,13 @@ import {
   Table,
   ForeignKey,
   BelongsTo,
+  HasMany,
 } from 'sequelize-typescript';
 import { ProductStatus } from 'src/enum';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { ImagesOfProduct } from 'src/product/models/images_of_product.model';
 
 @Table({ tableName: 'products', timestamps: true })
 export class Product extends Model {
@@ -87,4 +89,11 @@ export class Product extends Model {
 
   @BelongsTo(() => Category)
   declare category: Category;
+
+  @HasMany(()=> ImagesOfProduct, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  images: ImagesOfProduct[];
+
 }
