@@ -11,6 +11,7 @@ import { successRes } from 'src/utils/success-response';
 import { decodeJwt } from 'src/services/getIdByJwt';
 import { Request } from 'express';
 import { Product } from 'src/product/models/product.model';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class CartService {
@@ -22,60 +23,45 @@ export class CartService {
     const buyer_id = decoded.id;
 
     let cart = await this.cartModel.findOne({ where: { buyer_id } });
-
-    if(!cart) {
-      let foundProducts: any =  [];
-      for (const id of createCartDto.products) {
-        const product = await Product.findByPk(id)
-        foundProducts.push({
-          id: buyer_id,
-          name: product?.name,
-          price: product?.price,
-          quantity: product?.quantity
-        })
-      }
-    }
     
+    const productIds = createCartDto.products.map(id => String(id));
+    const products = await Product.findAll({
+      where: { id: { [Op.in]: productIds } }
+    });
+    
+    const newProducts = products.map(product => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: product.quantity
+    }));
+    
+    const totalAmount = newProducts.reduce(
+      (sum, product) => sum + product.price * product.quantity, 0);
+  
+    if (cart) {
       
-    //   foundProducts.push({
-    //     id: product.id,
-    //     name: product.name,
-    //     price: product.price,
-    //     quantity: 1
-    //   });
-    // }
+      const updatedProducts = [...cart.products, ...newProducts];
+      const updatedTotal = updatedProducts.reduce(
+        (sum, product) => sum + product.price * product.quantity,
+        0
+      );
 
-    // // Step 3: Calculate total amount
-    // const totalAmount = foundProducts.reduce(
-    //   (sum, product) => sum + product.price * product.quantity,
-    //   0
-    // );
+      await cart.update({
+        products: updatedProducts,
+        total_amount: updatedTotal,
+        item_count: updatedProducts.length,
+      });
 
-    // // Step 4: Create or update cart
-    // if (cart) {
-    //   // Merge new products with existing ones (simple concat for now)
-    //   const updatedProducts = [...cart.products, ...foundProducts];
-    //   const updatedTotal = updatedProducts.reduce(
-    //     (sum, product) => sum + product.price * product.quantity,
-    //     0
-    //   );
+      return successRes(cart, 200);
+    }
 
-    //   await cart.update({
-    //     products: updatedProducts,
-    //     total_amount: updatedTotal,
-    //     item_count: updatedProducts.length,
-    //   });
-
-    //   return successRes(cart, 200);
-    // }
-
-    // // If no cart exists — create new one
-    // cart = await this.cartModel.create({
-    //   buyer_id,
-    //   products: foundProducts,
-    //   total_amount: totalAmount,
-    //   item_count: foundProducts.length,
-    // });
+    cart = await this.cartModel.create({
+      buyer_id,
+      products: newProducts,
+      total_amount: totalAmount,
+      item_count: newProducts.length,
+    });
 
     return successRes(cart, 201);
   } catch (error) {
@@ -87,7 +73,7 @@ export class CartService {
   async findAll() {
     try {
       const carts = await this.cartModel.findAll({
-        include: ['user'],
+        attributes: { exclude: ['user'] }
       });
       return successRes(carts, 200);
     } catch (error) {
@@ -98,7 +84,7 @@ export class CartService {
   async findOne(id: string) {
     try {
       const cart = await this.cartModel.findByPk(id, {
-        include: ['user'],
+        attributes: { exclude: ['user'] }
       });
       if (!cart) {
         throw new NotFoundException(`Cart not found with id ${id}`);
@@ -116,7 +102,7 @@ export class CartService {
     try {
       const cart = await this.cartModel.findOne({
         where: { buyer_id },
-        include: ['user'],
+        attributes: { exclude: ['user'] }
       });
 
       if (!cart) {
@@ -144,23 +130,31 @@ export class CartService {
         throw new NotFoundException(`Cart not found with id ${id}`);
       }
 
-      if (updateCartDto.products) {
-        const totalAmount = updateCartDto.products.reduce(
-          (sum, product) => sum + product.price * product.quantity,
-          0,
-        );
-
-        updateCartDto['total_amount'] = totalAmount;
-        updateCartDto['item_count'] = updateCartDto.products.length;
+      const { product_id, quantity } = updateCartDto;
+      
+      const productIndex = cart.products.findIndex(p => p.id === product_id);
+      if (productIndex === -1) {
+        throw new NotFoundException(`Product not found in cart`);
       }
+      
+      cart.products[productIndex].quantity = quantity;
+      
+      const totalAmount = cart.products.reduce(
+        (sum, product) => sum + product.price * product.quantity,
+        0
+      );
 
-      await cart.update(updateCartDto);
+      await cart.update({
+        products: cart.products,
+        total_amount: totalAmount
+      });
+      
       return successRes(cart, 200);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new BadRequestException('Failed to update cart');
+      throw new BadRequestException('Failed to update cart quantity');
     }
   }
 
@@ -193,6 +187,37 @@ export class CartService {
       return successRes(null, 200);
     } catch (error) {
       throw new BadRequestException('Failed to clear cart');
+    }
+  }
+
+  async getCurrentUserCart(req: Request) {
+    try {
+      const decoded = await decodeJwt(req);
+      const buyer_id = decoded.id;
+      
+      const cart = await this.cartModel.findOne({
+        where: { buyer_id },
+        raw: false,
+        attributes: { 
+          exclude: ['user']
+        }
+      });
+      
+      if (!cart) {
+        return successRes({
+          products: [],
+          total_amount: 0,
+          item_count: 0
+        }, 200);
+      }
+      
+      return successRes({
+        products: cart.dataValues.products || [],
+        total_amount: cart.dataValues.total_amount || 0,
+        item_count: cart.dataValues.item_count || 0
+      }, 200);
+    } catch (error) {
+      throw new BadRequestException('Failed to fetch cart: ' + error.message);
     }
   }
 }

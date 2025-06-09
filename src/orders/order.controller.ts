@@ -30,6 +30,7 @@ export class OrderController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRoles.ADMIN, UserRoles.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   findAll() {

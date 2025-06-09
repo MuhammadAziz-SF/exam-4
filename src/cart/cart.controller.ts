@@ -9,6 +9,7 @@ import {
   HttpStatus,
   HttpCode,
   UseGuards,
+  Req
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { CreateCartDto } from './dto/create-cart.dto';
@@ -18,6 +19,7 @@ import { RolesGuard } from '../guards/roles.guard';
 import { Roles } from '../decorators/roles.decorator';
 import { Roles as UserRoles } from '../enum';
 import { SelfGuard } from 'src/guards/self.guard';
+import { Request } from 'express';
 
 @Controller('cart')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -27,8 +29,15 @@ export class CartController {
   @Post('add')
   @Roles(UserRoles.BUYER)
   @HttpCode(HttpStatus.CREATED)
-  addToCart(@Body() createCartDto: CreateCartDto) {
-    return this.cartService.addToCart(createCartDto);
+  addToCart(@Body() createCartDto: CreateCartDto, @Req() req: Request ) {
+    return this.cartService.addToCart(createCartDto, req);
+  }
+
+  @Get('my-cart')
+  @Roles(UserRoles.BUYER)
+  @HttpCode(HttpStatus.OK)
+  getCurrentUserCart(@Req() req: Request) {
+    return this.cartService.getCurrentUserCart(req);
   }
 
   @Get()

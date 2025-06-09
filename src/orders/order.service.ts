@@ -24,7 +24,8 @@ export class OrderService {
       const cart = await this.cartModel.findOne({
         where: { buyer_id },
       });
-
+      console.log(cart);
+      
       if (!cart || !cart.products || cart.products.length === 0) {
         throw new BadRequestException('Cart is empty or not found');
       }
@@ -48,9 +49,7 @@ export class OrderService {
 
   async findAll() {
     try {
-      const orders = await this.orderModel.findAll({
-        include: ['user'],
-      });
+      const orders = await this.orderModel.findAll();
       return successRes(orders, 200);
     } catch (error) {
       throw new BadRequestException('Failed to fetch orders');
@@ -61,7 +60,6 @@ export class OrderService {
     try {
       const orders = await this.orderModel.findAll({
         where: { buyer_id },
-        include: ['user'],
       });
       return successRes(orders, 200);
     } catch (error) {
@@ -71,9 +69,7 @@ export class OrderService {
 
   async findOne(id: string) {
     try {
-      const order = await this.orderModel.findByPk(id, {
-        include: ['user'],
-      });
+      const order = await this.orderModel.findByPk(id);
       if (!order) {
         throw new NotFoundException(`Order not found with id ${id}`);
       }

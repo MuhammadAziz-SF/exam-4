@@ -38,7 +38,6 @@ export class ProductService {
 
       const user = await Admin.findByPk(decoded.id);
       if (!user) {
-        console.log(user);
         throw new ConflictException('User not found');
       }
 
