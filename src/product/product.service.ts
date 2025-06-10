@@ -26,7 +26,7 @@ export class ProductService {
   async create(
     createProductDto: CreateProductDto,
     req: Request,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() files?: Express.Multer.File[],
   ): Promise<any> {
     const transaction = await this.sequelize.transaction();
     try {
@@ -53,11 +53,6 @@ export class ProductService {
       const category = await Category.findByPk(category_id, { transaction });
       if (!category) {
         throw new ConflictException('Category not found');
-      }
-
-      const user = await Admin.findByPk(decoded.id, { transaction });
-      if (!user) {
-        throw new ConflictException('User not found');
       }
 
       const newProduct = await this.model.create(
