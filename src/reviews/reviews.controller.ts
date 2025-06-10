@@ -63,6 +63,7 @@ export class ReviewsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRoles.BUYER, UserRoles.ADMIN, UserRoles.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   update(

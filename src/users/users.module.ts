@@ -20,7 +20,7 @@ import { MailModule } from 'src/mail/email.module';
       secret: config.JWT_ACCESS_K,
       signOptions: { expiresIn: config.JWT_ACCESS_T },
     }),
-    CacheModule.register(),
+    CacheModule.register({isGlobal: true}),
     MailModule,
   ],
   controllers: [UsersController],
