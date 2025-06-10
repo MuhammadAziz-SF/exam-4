@@ -1,5 +1,7 @@
+import { encrypt } from './../utils/bcrypt-encrypt';
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,21 +12,56 @@ import { Store } from './model/store.model';
 import { successRes } from 'src/utils/success-response';
 import { Product } from '../product/models/product.model';
 import { User } from '../users/entities/user.entity';
+import { catchError } from 'src/utils/catch-error';
 
 @Injectable()
 export class StoreService {
+  sequelize: any;
+  fileService: any;
+  imageModel: any;
   constructor(
     @InjectModel(Store) private model: typeof Store,
     @InjectModel(Product) private productModel: typeof Product,
   ) {}
 
-  async create(createStoreDto: CreateStoreDto) {
-    try {
-      const store = await this.model.create({ ...createStoreDto });
-      return successRes(store, 201);
-    } catch (error) {
-      throw new BadRequestException(error.message || 'Failed to create store');
+  async create(createStoreDto: CreateStoreDto, files?: Express.Multer.File[]
+){
+  const transaction = await this.sequelize.transaction();
+  try {
+    const { seller_id} = createStoreDto;
+    const existsStore = await this.model.findOne({where: {seller_id}, transaction});
+    if(existsStore){
+      throw new ConflictException('Store already exists');
     }
+    const store = await this.model.create(
+      {
+        seller_id
+      },
+      {transaction},
+    );
+    const imagesUrl : string[] = [];
+    if(files && files.length > 0){
+      for(let file of files){
+        imagesUrl.push(await this.fileService.createFile(file));
+      }
+       const images = imagesUrl.map((image: string) => {
+        return{
+          image_url: image,
+          store_id: store.dataValues.id
+        }
+       })
+       await this.imageModel.bulkCreate(images, {transaction});
+    }
+    await transaction.commit();
+    const findStore = await this.model.findOne({
+      where: { seller_id },
+      include: {all: true},
+    });
+    return successRes(findStore, 201);
+  } catch (error) {
+    await transaction.rollback();
+    return catchError(error)
+  }
   }
 
   async findAll() {

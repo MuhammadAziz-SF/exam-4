@@ -6,7 +6,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 import { Cart } from './entities/cart.entity';
 import { CreateCartDto } from './dto/create-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
+// import { UpdateCartDto } from './dto/update-cart.dto';
 import { successRes } from 'src/utils/success-response';
 import { decodeJwt } from 'src/services/getIdByJwt';
 import { Request } from 'express';
@@ -123,6 +123,7 @@ export class CartService {
     }
   }
 
+
   async update(id: string, updateCartDto: UpdateCartDto) {
     try {
       const cart = await this.cartModel.findByPk(id);
@@ -157,6 +158,7 @@ export class CartService {
       throw new BadRequestException('Failed to update cart quantity');
     }
   }
+
 
   async remove(id: string) {
     try {
