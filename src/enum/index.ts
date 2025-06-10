@@ -28,5 +28,5 @@ export enum StoreStatus {
 
 export enum OrderStatus {
   COMPLETE = 'complete',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }

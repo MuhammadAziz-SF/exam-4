@@ -19,5 +19,3 @@ export class SelfGuard implements CanActivate {
     throw new ForbiddenException('Forbidden user');
   }
 }
-
-  

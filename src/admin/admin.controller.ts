@@ -15,8 +15,10 @@ import { UpdateAdminDto } from './dto/update-admin.dto';
 import { LoginDto } from './dto/login.dto';
 import { ConfirmSignInAdminDto } from './dto/confirm-signin.dto';
 import { Response } from 'express';
+import { Roles as UserRoles } from '../enum';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { SuperAdminGuard } from 'src/guards/super-admin.guard';
+import { Roles } from 'src/decorators/roles.decorator';
 
 @Controller('admin')
 export class AdminController {
@@ -76,6 +78,7 @@ export class AdminController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @Roles(UserRoles.SUPER_ADMIN)
   remove(@Param('id') id: string, @Res() res: Response) {
     return this.adminService.remove(id, res);
   }

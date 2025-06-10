@@ -26,6 +26,7 @@ import { MailService } from 'src/mail/email.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ConfirmSignInAdminDto } from './dto/confirm-signin.dto';
+import { ConfirmSignUpAdminDto } from './dto/confirm-signup.dto';
 import { successRes } from 'src/utils/success-response';
 
 @Injectable()
@@ -112,7 +113,7 @@ export class AdminService {
         },
       });
 
-      if (existingAdmin) {
+            if (existingAdmin) {
         throw new ConflictException(
           existingAdmin.email === email
             ? 'Email already exists'
@@ -121,14 +122,52 @@ export class AdminService {
       }
 
       const hashedPassword = await encrypt(password);
-      const admin = await this.adminModel.create({
+      const newAdmin = await this.adminModel.create({
         ...createAdminDto,
         hashed_password: hashedPassword,
-        status: Status.ACTIVE,
+        status: Status.INACTIVE, // Set status to INACTIVE until confirmed
       });
 
-      const { hashed_password, ...result } = admin.toJSON();
-      return res.status(201).json(successRes(result, 201));
+      const otp = generateOTP();
+      await this.mailService.sendOtp(email, String(otp));
+      await this.cacheManager.set(`signup_${email}`, otp, 300000);
+
+      return res.status(201).json(successRes({ email }, 201));
+    } catch (error) {
+      return catchError(error);
+    }
+  }
+
+  async confirmSignUp(
+    confirmSignUpAdminDto: ConfirmSignUpAdminDto,
+    res: Response,
+  ): Promise<object> {
+    try {
+      const { email, otp } = confirmSignUpAdminDto;
+
+      const cachedOtp = await this.cacheManager.get(`signup_${email}`);
+      if (!cachedOtp || cachedOtp != otp) {
+        throw new BadRequestException('Invalid or expired OTP');
+      }
+
+      const admin = await this.adminModel.findOne({ where: { email } });
+      if (!admin) {
+        throw new NotFoundException('Admin not found');
+      }
+
+      await admin.update({ status: Status.ACTIVE });
+
+      await this.cacheManager.del(`signup_${email}`);
+
+      const { id, role, status } = admin.dataValues;
+      const payload = { id, role, status };
+      const accessToken = await this.tokenService.generateAccessToken(payload);
+      const refreshToken =
+        await this.tokenService.generateRefreshToken(payload);
+
+      writeToCookie(res, 'refreshTokenAdmin', refreshToken);
+
+      return res.status(200).json(successRes({ accessToken }, 200));
     } catch (error) {
       return catchError(error);
     }
@@ -227,7 +266,6 @@ export class AdminService {
         throw new NotFoundException('Admin not found');
       }
 
-      // Check if email or phone number already exists for other admins
       if (updateAdminDto.email || updateAdminDto.phone_number) {
         const existingAdmin = await this.adminModel.findOne({
           where: {
@@ -254,7 +292,6 @@ export class AdminService {
         }
       }
 
-      // Handle password update
       if (updateAdminDto.password) {
         const hashedPassword = await encrypt(updateAdminDto.password);
         await admin.update({
@@ -265,7 +302,6 @@ export class AdminService {
         await admin.update(updateAdminDto);
       }
 
-      // Fetch updated admin without password
       const updatedAdmin = await this.adminModel.findByPk(id, {
         attributes: { exclude: ['hashed_password'] },
       });

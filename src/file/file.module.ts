@@ -6,4 +6,3 @@ import { FileService } from './file.service';
   exports: [FileService],
 })
 export class FileModule {}
-

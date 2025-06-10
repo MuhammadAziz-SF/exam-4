@@ -65,9 +65,9 @@ export class Store extends Model {
   location: string;
 
   @Column({
-    type: DataType.ENUM('OPEN', 'CLOSED', 'MAINTENANCE', 'PAUSED', 'INACTIVE'),
+    type: DataType.ENUM(...Object.values(StoreStatus)),
     allowNull: true,
-    defaultValue: 'INACTIVE',
+    defaultValue: StoreStatus.INACTIVE,
   })
   store_status: StoreStatus;
 

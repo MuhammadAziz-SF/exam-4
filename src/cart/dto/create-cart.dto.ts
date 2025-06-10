@@ -5,4 +5,3 @@ export class CreateCartDto {
   @IsArray()
   products: string[];
 }
-

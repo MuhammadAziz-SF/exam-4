@@ -20,7 +20,7 @@ import { MailService } from 'src/mail/email.service';
       signOptions: { expiresIn: config.JWT_ACCESS_T },
     }),
     SequelizeModule.forFeature([Admin]),
-    CacheModule.register({isGlobal: true}),
+    CacheModule.register({ isGlobal: true }),
     MailModule,
   ],
   controllers: [AdminController],

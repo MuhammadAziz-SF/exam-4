@@ -31,7 +31,6 @@ export class ReviewsService {
         throw new NotFoundException('User not found');
       }
 
-      
       const product = await this.productModel.findByPk(
         createReviewDto.product_id,
       );
@@ -39,7 +38,6 @@ export class ReviewsService {
         throw new NotFoundException('Product not found');
       }
 
-      
       if (
         user.role !== Roles.BUYER &&
         user.role !== Roles.ADMIN &&
@@ -50,13 +48,11 @@ export class ReviewsService {
         );
       }
 
-      
       const review = await this.reviewModel.create({
         ...createReviewDto,
         is_reply: false,
       });
 
-     
       await this.updateProductRating(createReviewDto.product_id);
 
       return successRes(review, 201);
@@ -275,7 +271,6 @@ export class ReviewsService {
         throw new NotFoundException(`Review not found with id ${id}`);
       }
 
-     
       const user = await this.userModel.findByPk(user_id);
       if (
         review.user_id !== user_id &&
@@ -287,7 +282,6 @@ export class ReviewsService {
         );
       }
 
-      
       if (!review.is_reply) {
         await this.reviewModel.destroy({
           where: { parent_id: id },
@@ -296,7 +290,6 @@ export class ReviewsService {
 
       await review.destroy();
 
-      
       if (!review.is_reply) {
         await this.updateProductRating(review.product_id);
       }
@@ -315,7 +308,6 @@ export class ReviewsService {
 
   private async updateProductRating(product_id: string) {
     try {
-      
       const result = await this.reviewModel.findAll({
         where: { product_id, is_reply: false },
         attributes: [

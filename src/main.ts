@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import cfg from './config';
 import { HttpStatus, ValidationPipe } from '@nestjs/common';
+import cfg from './config';
 
 async function start() {
   const PORT = cfg.PORT;
