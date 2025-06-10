@@ -12,6 +12,7 @@ import { decodeJwt } from 'src/services/getIdByJwt';
 import { Request } from 'express';
 import { Product } from 'src/product/models/product.model';
 import { Op } from 'sequelize';
+import { UpdateCartDto } from './dto/update-cart.dto';
 
 @Injectable()
 export class CartService {

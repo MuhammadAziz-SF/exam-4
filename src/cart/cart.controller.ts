@@ -20,6 +20,7 @@ import { Roles } from '../decorators/roles.decorator';
 import { Roles as UserRoles } from '../enum';
 import { SelfGuard } from 'src/guards/self.guard';
 import { Request } from 'express';
+import { UpdateCartDto } from './dto/update-cart.dto';
 
 @Controller('cart')
 @UseGuards(JwtAuthGuard, RolesGuard)

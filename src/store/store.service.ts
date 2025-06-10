@@ -110,12 +110,11 @@ export class StoreService {
         throw new NotFoundException(`Store not found with id ${id}`);
       }
 
-      // Find products related to this store by seller_id
+      
       const products = await this.productModel.findAll({
         where: { seller_id: store.seller_id },
       });
-
-      // Combine store data with products
+      
       const storeWithProducts = {
         ...store.toJSON(),
         products,
