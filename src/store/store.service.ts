@@ -24,44 +24,46 @@ export class StoreService {
     @InjectModel(Product) private productModel: typeof Product,
   ) {}
 
-  async create(createStoreDto: CreateStoreDto, files?: Express.Multer.File[]
-){
-  const transaction = await this.sequelize.transaction();
-  try {
-    const { seller_id} = createStoreDto;
-    const existsStore = await this.model.findOne({where: {seller_id}, transaction});
-    if(existsStore){
-      throw new ConflictException('Store already exists');
-    }
-    const store = await this.model.create(
-      {
-        seller_id
-      },
-      {transaction},
-    );
-    const imagesUrl : string[] = [];
-    if(files && files.length > 0){
-      for(let file of files){
-        imagesUrl.push(await this.fileService.createFile(file));
+  async create(createStoreDto: CreateStoreDto, files?: Express.Multer.File[]) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const { seller_id } = createStoreDto;
+      const existsStore = await this.model.findOne({
+        where: { seller_id },
+        transaction,
+      });
+      if (existsStore) {
+        throw new ConflictException('Store already exists');
       }
-       const images = imagesUrl.map((image: string) => {
-        return{
-          image_url: image,
-          store_id: store.dataValues.id
+      const store = await this.model.create(
+        {
+          seller_id,
+        },
+        { transaction },
+      );
+      const imagesUrl: string[] = [];
+      if (files && files.length > 0) {
+        for (let file of files) {
+          imagesUrl.push(await this.fileService.createFile(file));
         }
-       })
-       await this.imageModel.bulkCreate(images, {transaction});
+        const images = imagesUrl.map((image: string) => {
+          return {
+            image_url: image,
+            store_id: store.dataValues.id,
+          };
+        });
+        await this.imageModel.bulkCreate(images, { transaction });
+      }
+      await transaction.commit();
+      const findStore = await this.model.findOne({
+        where: { seller_id },
+        include: { all: true },
+      });
+      return successRes(findStore, 201);
+    } catch (error) {
+      await transaction.rollback();
+      return catchError(error);
     }
-    await transaction.commit();
-    const findStore = await this.model.findOne({
-      where: { seller_id },
-      include: {all: true},
-    });
-    return successRes(findStore, 201);
-  } catch (error) {
-    await transaction.rollback();
-    return catchError(error)
-  }
   }
 
   async findAll() {
@@ -75,7 +77,6 @@ export class StoreService {
         ],
       });
 
-      // For each store, find and include related products
       const storesWithProducts = await Promise.all(
         stores.map(async (store) => {
           const products = await this.productModel.findAll({
@@ -110,11 +111,10 @@ export class StoreService {
         throw new NotFoundException(`Store not found with id ${id}`);
       }
 
-      
       const products = await this.productModel.findAll({
         where: { seller_id: store.seller_id },
       });
-      
+
       const storeWithProducts = {
         ...store.toJSON(),
         products,

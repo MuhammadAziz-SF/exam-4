@@ -7,7 +7,7 @@ import {
   ForeignKey,
   BelongsTo,
 } from 'sequelize-typescript';
-import { Status } from 'src/enum';
+import { OrderStatus, Status } from 'src/enum';
 import { User } from 'src/users/entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -42,11 +42,11 @@ export class Order extends Model {
   total_amount: number;
 
   @Column({
-    type: DataType.ENUM(Status.ACTIVE, Status.INACTIVE),
+    type: DataType.ENUM(...Object.values(OrderStatus)),
     allowNull: false,
-    defaultValue: Status.ACTIVE,
+    defaultValue: OrderStatus.COMPLETE,
   })
-  status: string;
+  status: OrderStatus;
 
   @BelongsTo(() => User)
   user: User;

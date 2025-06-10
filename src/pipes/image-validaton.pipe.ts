@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { extname } from 'path';
 import { catchError } from 'src/utils/catch-error';
-import {  } from 'src/utils/cookie';
+import {} from 'src/utils/cookie';
 
 @Injectable()
 export class ImageValidationPipe implements PipeTransform {

@@ -27,7 +27,7 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  @UseInterceptors(FilesInterceptor('pictures')) 
+  @UseInterceptors(FilesInterceptor('pictures'))
   @Roles(UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.SELLER)
   async create(
     @Body() createProductDto: CreateProductDto,
@@ -56,7 +56,7 @@ export class ProductController {
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
     @UploadedFiles() files: Express.Multer.File[],
-    @Req() req: Request, 
+    @Req() req: Request,
   ) {
     return this.productService.update(id, updateProductDto, req, files);
   }

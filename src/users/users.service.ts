@@ -148,20 +148,16 @@ export class UsersService {
 
   async findAll() {
     try {
-      // Get all users without products
       const users = await this.model.findAll({
         attributes: { exclude: ['hashed_password'] },
       });
 
-      // Process each user to check if they have products
       const usersWithConditionalProducts = await Promise.all(
         users.map(async (user) => {
-          // Check if user has products
           const products = await Product.findAll({
             where: { seller_id: user.id },
           });
 
-          // If products exist, get user with products included
           if (products && products.length > 0) {
             return await this.model.findByPk(user.id, {
               attributes: { exclude: ['hashed_password'] },
@@ -174,7 +170,6 @@ export class UsersService {
             });
           }
 
-          // If no products, return just the user
           return user;
         }),
       );

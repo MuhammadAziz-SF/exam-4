@@ -12,7 +12,7 @@ import { successRes } from 'src/utils/success-response';
 import { ImagesOfProduct } from './models/images_of_product.model';
 import { Sequelize } from 'sequelize-typescript';
 import { FileService } from 'src/file/file.service';
-import {Multer} from 'multer'
+import { Multer } from 'multer';
 
 @Injectable()
 export class ProductService {

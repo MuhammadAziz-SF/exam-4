@@ -11,9 +11,9 @@ import { FileModule } from 'src/file/file.module';
   imports: [
     SequelizeModule.forFeature([Product, ImagesOfProduct]),
     MulterModule.register({
-      dest: './uploads', 
+      dest: './uploads',
     }),
-    FileModule
+    FileModule,
   ],
   controllers: [ProductController],
   providers: [ProductService],

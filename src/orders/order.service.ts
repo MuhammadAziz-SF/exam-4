@@ -19,13 +19,13 @@ export class OrderService {
 
   async createOrderFromCart(req: Request) {
     try {
-      const decoded = await decodeJwt(req)
-      const buyer_id = decoded.id
+      const decoded = await decodeJwt(req);
+      const buyer_id = decoded.id;
       const cart = await this.cartModel.findOne({
         where: { buyer_id },
       });
       console.log(cart);
-      
+
       if (!cart || !cart.products || cart.products.length === 0) {
         throw new BadRequestException('Cart is empty or not found');
       }

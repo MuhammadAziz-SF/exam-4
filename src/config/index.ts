@@ -2,12 +2,12 @@ import { config } from 'dotenv';
 config();
 
 export default {
-  PORT: Number(process.env.PORT),
-  PG_HOST: String(process.env.PG_HOST),
+  PORT: Number(process.env.PORT) || 3000,
+  PG_HOST: String(process.env.PG_HOST) || 'localhost',
   PG_PORT: Number(process.env.PG_PORT),
-  PG_USER: String(process.env.PG_USER),
-  PG_PASS: String(process.env.PG_PASS),
-  PG_DB: String(process.env.PG_DB),
+  PG_USER: String(process.env.PG_USER) || 'postgres',
+  PG_PASS: String(process.env.PG_PASS) || '1111',
+  PG_DB: String(process.env.PG_DB) || 'selling_app',
   JWT_ACCESS_K: String(process.env.JWT_ACCESS_SECRET_KEY),
   JWT_ACCESS_T: String(process.env.JWT_ACCESS_SECRET_TIME),
   JWT_REFRESH_K: String(process.env.JWT_REFRESH_SECRET_KEY),

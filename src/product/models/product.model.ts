@@ -90,10 +90,9 @@ export class Product extends Model {
   @BelongsTo(() => Category)
   declare category: Category;
 
-  @HasMany(()=> ImagesOfProduct, {
+  @HasMany(() => ImagesOfProduct, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
   images: ImagesOfProduct[];
-
 }
