@@ -23,29 +23,29 @@ export class Cart extends Model {
     type: DataType.UUID,
     allowNull: false,
   })
-  buyer_id: string;
+  declare buyer_id: string;
 
   @Column({
     type: DataType.JSONB,
     allowNull: false,
     defaultValue: [],
   })
-  products: any[];
+  declare products: any[];
 
   @Column({
     type: DataType.DECIMAL(10, 2),
     allowNull: false,
     defaultValue: 0,
   })
-  total_amount: number;
+  declare total_amount: number;
 
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
     defaultValue: 0,
   })
-  item_count: number;
+  declare item_count: number;
 
   @BelongsTo(() => User)
-  user: User;
+  declare user: User;
 }

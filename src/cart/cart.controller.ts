@@ -29,8 +29,17 @@ export class CartController {
   @Post('add')
   @Roles(UserRoles.BUYER)
   @HttpCode(HttpStatus.CREATED)
-  addToCart(@Body() createCartDto: CreateCartDto, @Req() req: Request) {
+
+  addToCart(@Body() createCartDto: CreateCartDto, @Req() req: Request ) {
     return this.cartService.addToCart(createCartDto, req);
+  }
+
+  @Get('my-cart')
+  @Roles(UserRoles.BUYER)
+  @HttpCode(HttpStatus.OK)
+  getCurrentUserCart(@Req() req: Request) {
+    return this.cartService.getCurrentUserCart(req);
+
   }
 
   @Get()
@@ -56,13 +65,13 @@ export class CartController {
     return this.cartService.findOne(id);
   }
 
-  // @Patch(':id')
-  // @UseGuards(JwtAuthGuard, RolesGuard, SelfGuard)
-  // @Roles(UserRoles.BUYER)
-  // @HttpCode(HttpStatus.OK)
-  // update(@Param('id') id: string, @Body() updateCartDto: UpdateCartDto) {
-  //   return this.cartService.update(id, updateCartDto);
-  // }
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard, SelfGuard)
+  @Roles(UserRoles.BUYER)
+  @HttpCode(HttpStatus.OK)
+  update(@Param('id') id: string, @Body() updateCartDto: UpdateCartDto) {
+    return this.cartService.update(id, updateCartDto);
+  }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)

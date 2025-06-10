@@ -7,7 +7,6 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { Admin } from './models/admin.model';
 import { RolesGuard } from '../guards/roles.guard';
 import { AdminService } from './admin.service';
-import { join } from 'path';
 import { TokenService } from '../services/jwt-gen';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MailModule } from 'src/mail/email.module';
@@ -21,7 +20,7 @@ import { MailService } from 'src/mail/email.service';
       signOptions: { expiresIn: config.JWT_ACCESS_T },
     }),
     SequelizeModule.forFeature([Admin]),
-    CacheModule.register(),
+    CacheModule.register({isGlobal: true}),
     MailModule,
   ],
   controllers: [AdminController],
