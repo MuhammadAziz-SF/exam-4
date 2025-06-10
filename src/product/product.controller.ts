@@ -2,12 +2,14 @@ import {
   Controller,
   Get,
   Post,
-  Body,
   Patch,
   Param,
   Delete,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFiles,
+  Body,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -17,6 +19,7 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { Roles as UserRoles } from 'src/enum';
 import { Request } from 'express';
 import { RolesGuard } from 'src/guards/roles.guard';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('products')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,38 +27,43 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseInterceptors(FilesInterceptor('pictures')) 
   @Roles(UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.SELLER)
-  create(@Body() createProductDto: CreateProductDto, @Req() req: Request) {
-    return this.productService.create(createProductDto, req);
+  async create(
+    @Body() createProductDto: CreateProductDto,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Req() req: Request,
+  ) {
+    return this.productService.create(createProductDto, req, files);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.SELLER)
   @Get()
-  findAll() {
-    return this.productService.findAll();
+  @Roles(UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.SELLER)
+  async findAll() {
+    return await this.productService.findAll();
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.SELLER)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productService.findOne(id);
+  @Roles(UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.SELLER)
+  async findOne(@Param('id') id: string) {
+    return await this.productService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.SELLER)
   @Patch(':id')
+  @UseInterceptors(FilesInterceptor('pictures'))
   @Roles(UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.SELLER)
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(id, updateProductDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Req() req: Request, 
+  ) {
+    return this.productService.update(id, updateProductDto, req, files);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Delete(':id')
   @Roles(UserRoles.ADMIN, UserRoles.SUPER_ADMIN, UserRoles.SELLER)
-  remove(@Param('id') id: string) {
-    return this.productService.remove(id);
+  async remove(@Param('id') id: string) {
+    return await this.productService.remove(id);
   }
 }

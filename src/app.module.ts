@@ -21,6 +21,8 @@ import { Cart } from './cart/entities/cart.entity';
 import { MailModule } from './mail/email.module';
 import { Order } from './orders/entities/order.entity';
 import { OrderModule } from './orders/order.module';
+import { ImagesOfProduct } from './product/models/images_of_product.model';
+
 
 @Module({
   imports: [
@@ -34,7 +36,7 @@ import { OrderModule } from './orders/order.module';
       synchronize: true,
       logging: false,
       autoLoadModels: true,
-      models: [User, Category, Product, Store, Admin, Review, Cart, Order],
+      models: [User, Category, Product, Store, Admin, Review, Cart, Order, ImagesOfProduct],
     }),
     CacheModule.register({ isGlobal: true }),
     JwtModule.register({
